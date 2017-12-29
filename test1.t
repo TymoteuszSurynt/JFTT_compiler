@@ -1,4 +1,8 @@
 VAR
-	a b[10]
+	a b c[10]
 BEGIN
+	READ a
+	READ b
+
+
 END

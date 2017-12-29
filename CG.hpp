@@ -4,3 +4,5 @@ int dataLocation(int type){
 	dataOffset+=type;
 	return temp;
 }
+
+int codeOffset=0;

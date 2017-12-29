@@ -4,9 +4,10 @@ extern "C" int yyparse();
 #include <iostream>
 #include <cstdlib>
 #include <cstdio>
-#include <string>
+#include <cstring>
 #include "ST.hpp"
 #include "CG.hpp"
+#include "SM.hpp"
 int err;
 /*FUNCTIONS*/
 int yylex(void);
@@ -30,7 +31,7 @@ void newVariable(std::string name,int type);
 %token <pid,intval> pidentifierTable
 %token <intval> num
 /*TYPES*/
-%type <intval> expression value
+%type <intval> expression value identifier
 /*OPERATIONS*/
 %left '+' '-'
 %left '*' '/' '%'
@@ -53,14 +54,14 @@ commands	: /*empty*/
 		| command							{}
 		;
 
-command		: identifier ASSIGN expression					
+command		: identifier ASSIGN expression					{addOperation(STORE, $1);codeOffset++;}	
 		| IF condition THEN commands ELSE commands ENDIF
 		| IF condition THEN commands ENDIF
 		| WHILE condition DO commands ENDWHILE
 		| FOR pidentifier FROM value TO value DO commands ENDFOR	{}
 		| FOR pidentifier FROM value DOWNTO value DO commands ENDFOR	{}
-		| READ identifier
-		| WRITE value
+		| READ identifier						{addOperation(GET, -1);codeOffset++;addOperation(STORE, $2);codeOffset++;}
+		| WRITE value							{}
 		;
 
 expression	: value
@@ -95,14 +96,61 @@ value		: num								{printf("DEBUG NUM: %d\n",$1);}
 		| identifier							{}
 		;
 
-identifier	: pidentifier							{}
-		| pidentifier '[' pidentifier ']'				{}
-		| pidentifier '['num']'						{}
+identifier	: pidentifier							{int k=getVar($1);
+										if(k!=-1){
+											$$=k;
+										}else{
+											err++;
+											std::string err1=$1;
+											std::string error="Variable \""+err1+"\" not defined!\n";
+											char * temp=new char[error.size()+1];
+											strcpy ( temp, error.c_str() );
+											yyerror(temp);
+										}}	
+		| pidentifier '[' pidentifier ']'				{int k=getVar($3);
+										int l=getVar($1);
+										if(k!=-1){
+											if(l!=-1){
+												$$=$3;
+											}else{
+												err++;
+												std::string err1=$1;
+												std::string error="Variable \""+err1+"\" not defined!\n";
+												char * temp=new char[error.size()+1];
+												strcpy ( temp, error.c_str() );
+												yyerror(temp);
+											}	
+										}else{
+											err++;
+											std::string err1=$3;
+											std::string error="Variable \""+err1+"\" not defined!\n";
+											char * temp=new char[error.size()+1];
+											strcpy ( temp, error.c_str() );
+											yyerror(temp);
+										}}
+		| pidentifier '['num']'						{int k=getVar($1);
+										if(k!=-1){
+											$$=k;
+										}else{
+											err++;
+											std::string err1=$1;
+											std::string error="Variable \""+err1+"\" not defined!\n";
+											char * temp=new char[error.size()+1];
+											strcpy ( temp, error.c_str() );
+											yyerror(temp);
+										}}
 		;
 %%
 int main(int argc, char* argv[]){
 	err=0;
 	yyparse();
+	if(err==0){
+		for (int i=0;i<instructions.size(); ++i)
+		    std::cout << decodeEnum(instructions.at(i).co)<<' '<<instructions.at(i).arg << ' '<<instructions.at(i).cost <<std::endl;
+	}else{
+		std::cout<<"Compilation ended with "<<err<<" errors\n";
+	}
+	
 	return 0;
 }
 /*yyerror*/
@@ -110,9 +158,10 @@ void yyerror (char *msg) { printf("Error: %s\n", msg); }
 /*STABLE FUNCTIONS*/
 void newVariable(std::string name,int type){
 	if(!addVar(name)){
-		stable[name].offset=dataLocation(type);
 		err++;
 		yyerror("Duplicate initialization\n");
+	}else{
+		stable[name].offset=dataLocation(type);
 	}
 }
 

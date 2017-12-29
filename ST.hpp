@@ -18,3 +18,10 @@ bool addVar(std::string name){
 	stable[name]=a;
 	return true;
 }
+int getVar(std::string name){
+	it=stable.find(name);
+	if(it!=stable.end()){
+		return it->second.offset;
+	}
+	return -1;
+} 
