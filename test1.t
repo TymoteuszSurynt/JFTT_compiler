@@ -1,0 +1,4 @@
+VAR
+	a b[10]
+BEGIN
+END
