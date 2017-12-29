@@ -261,7 +261,61 @@ expression	: value								{if($1->variable){
 												numb1=numb1+1;
 											}
 										}else{
+											if($1->variable && $3->variable){
+												if($1->table){
+													addOperation(LOADI, $1->intval);codeOffset++;
+												}else{
+													addOperation(LOAD, $1->intval);codeOffset++;}
+												w
+												if($3->table){
+													addOperation(ADDI, $3->intval);codeOffset++;
+												}else{
+													addOperation(ADD, $3->intval);codeOffset++;}
+											}else if($1->variable){
+												addOperation(ZERO, -1);codeOffset++;
+												if($3->intval!=0)
+													addOperation(INC, -1);codeOffset++;
+												int numb=1;
+												int numb1=2;
+												while(numb1<=$3->intval){
+													addOperation(SHL, -1);codeOffset++;
+													numb=numb1;
+													numb1=2*numb1;
+												}
+												numb1=numb+1;
+												while(numb1<=$3->intval){
+													addOperation(INC, -1);codeOffset++;
+													numb=numb1;
+													numb1=numb1+1;
+												}
 
+												if($1->table){
+													addOperation(ADDI, $1->intval);codeOffset++;
+												}else{
+													addOperation(ADD, $1->intval);codeOffset++;}
+											}else{
+												addOperation(ZERO, -1);codeOffset++;
+												if($1->intval!=0)
+													addOperation(INC, -1);codeOffset++;
+												int numb=1;
+												int numb1=2;
+												while(numb1<=$1->intval){
+													addOperation(SHL, -1);codeOffset++;
+													numb=numb1;
+													numb1=2*numb1;
+												}
+												numb1=numb+1;
+												while(numb1<=$1->intval){
+													addOperation(INC, -1);codeOffset++;
+													numb=numb1;
+													numb1=numb1+1;
+												}
+
+												if($3->table){
+													addOperation(ADDI, $3->intval);codeOffset++;
+												}else{
+													addOperation(ADD, $3->intval);codeOffset++;}
+											}
 										}}
 		| value '/' value						{if(!$1->variable && !$3->variable){
 											int max;
