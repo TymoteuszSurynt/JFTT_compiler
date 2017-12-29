@@ -70,25 +70,26 @@ vdeclarations	: /* empty */
 		| vdeclarations pidentifier '[' num ']' 			{newVariable($2,$4);}
 		;
 
-commands	: /*empty*/
-		| commands command						{}
+commands	: commands command						{}
 		| command							{}
 		;
 
-command		: identifier ASSIGN expression					{addOperationLocal(STORE, $1->intval);}	
+command		: identifier ASSIGN expression ';'				{addOperationLocal(STORE, $1->intval);}	
 		/*IF+ELSE*/
 		| IF condition							{$1=newLabel();
 										$1->jumpFalse=codeOffset;
 										addOperationLocal(JZERO, -1);}
-		THEN commands							{$1->goTo=codeOffset;addOperationLocal(JUMP, -1);changeOperation($1->jumpFalse,codeOffset);}
-		ELSE commands							{changeOperation($1->goTo,codeOffset);}
-		ENDIF								
+			commands						{$1->goTo=codeOffset;addOperationLocal(JUMP, -1);changeOperation($1->jumpFalse,codeOffset);}
+		THEN 								
+		ELSE commands							
+		ENDIF								{changeOperation($1->goTo,codeOffset);}	
 		/*IF*/
-		| IF condition 							{$1=newLabel();
+		| IF condition 							
+		THEN 								{$1=newLabel();
 										$1->jumpFalse=codeOffset;
 										addOperationLocal(JZERO, -1);}
-		THEN commands							{changeOperation($1->jumpFalse,codeOffset);}
-		ENDIF								
+			commands							
+		ENDIF								{changeOperation($1->jumpFalse,codeOffset);}	
 		/*WHILE*/
 		| WHILE	condition						{$1=newLabel();
 										$1->jumpFalse=codeOffset;
@@ -100,14 +101,39 @@ command		: identifier ASSIGN expression					{addOperationLocal(STORE, $1->intval
 		/*FOR+DOWNTO*/
 		| FOR pidentifier FROM value DOWNTO value DO commands ENDFOR	{}
 		/*READ+WRITE*/
-		| READ identifier						{addOperationLocal(GET, -1);
+		| READ identifier ';'						{addOperationLocal(GET, -1);
 											if($2->table){
 												addOperationLocal(STOREI, $2->intval);
 											}else{
 												addOperationLocal(STORE, $2->intval);
 											}
+										}
+		| WRITE value ';'						{if($2->variable){
+											if($2->table){
+												addOperationLocal(LOADI, $2->intval);
+											}else{
+												addOperationLocal(LOAD, $2->intval);
 											}
-		| WRITE value							{addOperationLocal(PUT, -1);}
+											
+										}else{
+											addOperationLocal(ZERO, -1);
+											if($2->intval!=0)
+												addOperationLocal(INC, -1);
+											int numb=1;
+											int numb1=2;
+											while(numb1<=$2->intval){
+												addOperationLocal(SHL, -1);
+												numb=numb1;
+												numb1=2*numb1;
+											}
+											numb1=numb+1;
+											while(numb1<=$2->intval){
+												addOperationLocal(INC, -1);
+												numb=numb1;
+												numb1=numb1+1;
+											}
+										}
+										addOperationLocal(PUT, -1);}
 		;
 
 expression	: value								{if($1->variable){
@@ -547,7 +573,7 @@ int main(int argc, char* argv[]){
 			}else{
 				agrStr=std::to_string(instructions.at(i).arg);
 			}
-			std::cout << decodeEnum(instructions.at(i).co)<<' '<<agrStr <<std::endl;
+			std::cout <<i<<' '<<decodeEnum(instructions.at(i).co)<<' '<<agrStr <<std::endl;
 		}
 	}else{
 		std::cout<<"Compilation ended with "<<err<<" errors\n";

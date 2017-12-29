@@ -1,10 +1,8 @@
 VAR
-	a b c[10]
+  a
 BEGIN
-	IF a<b THEN
-		a:=2
-	ELSE
-		a:=4
+ 	a:=1;
+	IF 2=1 THEN
+		a:=3;
 	ENDIF
-
 END
