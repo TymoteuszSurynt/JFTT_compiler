@@ -18,12 +18,18 @@ struct varTab{
 	int intval;
 	bool table;
 };	
+struct varTabMath{
+	int intval;
+	bool variable;
+	bool table;
+};
 %}
 
 %union rec{
 	int intval;
 	char * pid;
 	struct varTab *tab;
+	struct varTabMath *tab2;
 }
 %start program
 /*TOKENS*/
@@ -36,6 +42,7 @@ struct varTab{
 %token <tab> pidentifierTable
 %token <intval> num
 /*TYPES*/
+%type <tab2> value
 %type <tab> identifier
 /*OPERATIONS*/
 %left '+' '-'
@@ -75,11 +82,212 @@ command		: identifier ASSIGN expression					{addOperation(STORE, $1->intval);cod
 		| WRITE value							{addOperation(PUT, -1);codeOffset++;}
 		;
 
-expression	: value							
-		| value '+' value						{}
-		| value '-' value						{}
-		| value '*' value						{}
-		| value '/' value						{}
+expression	: value								{if($1->variable){
+											if($1->table){
+												addOperation(LOADI, $1->intval);
+											}else{
+												addOperation(LOAD, $1->intval);
+											}
+											codeOffset++;
+										}else{
+											addOperation(ZERO, -1);codeOffset++;
+											if($1->intval!=0)
+												addOperation(INC, -1);codeOffset++;
+											int numb=1;
+											int numb1=2;
+											while(numb1<=$1->intval){
+												addOperation(SHL, -1);codeOffset++;
+												numb=numb1;
+												numb1=2*numb1;
+											}
+											numb1=numb+1;
+											while(numb1<=$1->intval){
+												addOperation(INC, -1);codeOffset++;
+												numb=numb1;
+												numb1=numb1+1;
+											}
+										}}						
+		| value '+' value						{if(!$1->variable && !$3->variable){
+											int max=$1->intval+$3->intval;
+											addOperation(ZERO, -1);codeOffset++;
+											if(max!=0)
+												addOperation(INC, -1);codeOffset++;
+											int numb=1;
+											int numb1=2;
+											while(numb1<=max){
+												addOperation(SHL, -1);codeOffset++;
+												numb=numb1;
+												numb1=2*numb1;
+											}
+											numb1=numb+1;
+											while(numb1<=max){
+												addOperation(INC, -1);codeOffset++;
+												numb=numb1;
+												numb1=numb1+1;
+											}
+										}else{
+											if($1->variable && $3->variable){
+												if($1->table){
+													addOperation(LOADI, $1->intval);codeOffset++;
+												}else{
+													addOperation(LOAD, $1->intval);codeOffset++;}
+												if($3->table){
+													addOperation(ADDI, $3->intval);codeOffset++;
+												}else{
+													addOperation(ADD, $3->intval);codeOffset++;}
+											}else if($1->variable){
+												addOperation(ZERO, -1);codeOffset++;
+												if($3->intval!=0)
+													addOperation(INC, -1);codeOffset++;
+												int numb=1;
+												int numb1=2;
+												while(numb1<=$3->intval){
+													addOperation(SHL, -1);codeOffset++;
+													numb=numb1;
+													numb1=2*numb1;
+												}
+												numb1=numb+1;
+												while(numb1<=$3->intval){
+													addOperation(INC, -1);codeOffset++;
+													numb=numb1;
+													numb1=numb1+1;
+												}
+
+												if($1->table){
+													addOperation(ADDI, $1->intval);codeOffset++;
+												}else{
+													addOperation(ADD, $1->intval);codeOffset++;}
+											}else{
+												addOperation(ZERO, -1);codeOffset++;
+												if($1->intval!=0)
+													addOperation(INC, -1);codeOffset++;
+												int numb=1;
+												int numb1=2;
+												while(numb1<=$1->intval){
+													addOperation(SHL, -1);codeOffset++;
+													numb=numb1;
+													numb1=2*numb1;
+												}
+												numb1=numb+1;
+												while(numb1<=$1->intval){
+													addOperation(INC, -1);codeOffset++;
+													numb=numb1;
+													numb1=numb1+1;
+												}
+
+												if($3->table){
+													addOperation(ADDI, $3->intval);codeOffset++;
+												}else{
+													addOperation(ADD, $3->intval);codeOffset++;}
+											}
+										}
+										}
+		| value '-' value						{if(!$1->variable && !$3->variable){
+											int max=$1->intval-$3->intval;
+											addOperation(ZERO, -1);codeOffset++;
+											if(max>0)
+												addOperation(INC, -1);codeOffset++;
+											int numb=1;
+											int numb1=2;
+											while(numb1<=max){
+												addOperation(SHL, -1);codeOffset++;
+												numb=numb1;
+												numb1=2*numb1;
+											}
+											numb1=numb+1;
+											while(numb1<=max){
+												addOperation(INC, -1);codeOffset++;
+												numb=numb1;
+												numb1=numb1+1;
+											}
+										}else{
+											if($1->variable && $3->variable){
+												if($1->table){
+													addOperation(LOADI, $1->intval);codeOffset++;
+												}else{
+													addOperation(LOAD, $1->intval);codeOffset++;}
+												if($3->table){
+													addOperation(ADDI, $3->intval);codeOffset++;
+												}else{
+													addOperation(ADD, $3->intval);codeOffset++;}
+											}else if($1->variable){
+												if($1->table){
+													addOperation(LOADI, $1->intval);codeOffset++;
+												}else{
+													addOperation(LOAD, $1->intval);codeOffset++;}
+												for(int i=0;i<$3->intval;i++){
+													addOperation(DEC, -1);codeOffset++;
+												}
+											}else{
+												addOperation(ZERO, -1);codeOffset++;
+												if($1->intval!=0)
+													addOperation(INC, -1);codeOffset++;
+												int numb=1;
+												int numb1=2;
+												while(numb1<=$1->intval){
+													addOperation(SHL, -1);codeOffset++;
+													numb=numb1;
+													numb1=2*numb1;
+												}
+												numb1=numb+1;
+												while(numb1<=$1->intval){
+													addOperation(INC, -1);codeOffset++;
+													numb=numb1;
+													numb1=numb1+1;
+												}
+
+												if($3->table){
+													addOperation(SUBI, $3->intval);codeOffset++;
+												}else{
+													addOperation(SUB, $3->intval);codeOffset++;}
+											}
+										}}
+		| value '*' value						{if(!$1->variable && !$3->variable){
+											int max=$1->intval*$3->intval;
+											addOperation(ZERO, -1);codeOffset++;
+											if(max!=0)
+												addOperation(INC, -1);codeOffset++;
+											int numb=1;
+											int numb1=2;
+											while(numb1<=max){
+												addOperation(SHL, -1);codeOffset++;
+												numb=numb1;
+												numb1=2*numb1;
+											}
+											numb1=numb+1;
+											while(numb1<=max){
+												addOperation(INC, -1);codeOffset++;
+												numb=numb1;
+												numb1=numb1+1;
+											}
+										}else{
+
+										}}
+		| value '/' value						{if(!$1->variable && !$3->variable){
+											int max;
+											if($3->intval!=0)
+												max=$1->intval/$3->intval;
+											else
+												max=0;
+											addOperation(ZERO, -1);codeOffset++;
+											if(max!=0)
+												addOperation(INC, -1);codeOffset++;
+											int numb=1;
+											int numb1=2;
+											while(numb1<=max){
+												addOperation(SHL, -1);codeOffset++;
+												numb=numb1;
+												numb1=2*numb1;
+											}
+											numb1=numb+1;
+											while(numb1<=max){
+												addOperation(INC, -1);codeOffset++;
+												numb=numb1;
+												numb1=numb1+1;
+											}
+										}else{
+
+										}}
 											
 		| value '%' value						{}
 		;
@@ -92,13 +300,19 @@ condition	: value '=' value						{}
 		| value ">=" value						{}
 		;
 
-value		: num								{addOperation(ZERO, -1);codeOffset++;addOperation(INC, -1);codeOffset++;}
-		| identifier							{if($1->table){
-											addOperation(LOADI, $1->intval);
-										}else{
-											addOperation(LOAD, $1->intval);
-										}
-										codeOffset++;}
+value		: num								{struct varTabMath *tempV= (struct varTabMath*)malloc(sizeof (struct varTabMath));
+										tempV->intval=$1;
+										tempV->variable=false;
+										tempV->table=false;
+										$$=tempV;}
+		| identifier							{struct varTabMath *tempV= (struct varTabMath*)malloc(sizeof (struct varTabMath));
+										tempV->intval=$1->intval;
+										tempV->variable=true;
+										if($1->table)
+											tempV->table=true;
+										else
+											tempV->table=false;
+										$$=tempV;}
 		;
 
 identifier	: pidentifier							{int k=getVar($1);
