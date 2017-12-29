@@ -5,13 +5,14 @@ extern "C" int yyparse();
 #include <cstdlib>
 #include <cstdio>
 #include <string>
+#include "ST.hpp"
 int err;
 int yylex(void);
 void yyerror (char *msg);
+
 %}
 %union semrec{
 	int intval;
-	
 }
 %start program
 %token VAR BEG END
