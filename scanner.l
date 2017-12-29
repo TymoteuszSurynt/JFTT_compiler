@@ -13,7 +13,10 @@ ID	[_a-z]+
 %%
 \(.+\)		{}
 {DIGIT}+	{yylval.intval=atoi(yytext);return(num);}
-":="		{return(ASSIGN);}	
+":="		{return(ASSIGN);}
+"<>"		{return(DIFF);}
+"<="		{return(SOE);}
+">="		{return(BOE);}
 VAR		{return(VAR);}
 BEGIN		{return(BEG);}	
 READ		{return(READ);}

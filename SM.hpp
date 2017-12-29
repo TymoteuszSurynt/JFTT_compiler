@@ -73,6 +73,9 @@ std::string decodeEnum(enum codeOptions option){
 		
 	}
 }
+void changeOperation(int id, int arg){
+	instructions.at(id).arg=arg;
+}
 void addOperation(enum codeOptions option, int arg){
 	struct instruction temp{};
 	temp.arg=arg;
