@@ -15,3 +15,4 @@ Things to do:
   - cond <=
   - cond >=
   - WHILE (done)
+  - FOR x2
