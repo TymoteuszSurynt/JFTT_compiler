@@ -14,11 +14,16 @@ int yylex(void);
 void yyerror (char *msg);
 /*MY FUNCTIONS*/
 void newVariable(std::string name,int type);
+struct varTab{
+	int intval;
+	bool table;
+};	
 %}
+
 %union rec{
 	int intval;
-	char* pid;
-	
+	char * pid;
+	struct varTab *tab;
 }
 %start program
 /*TOKENS*/
@@ -28,10 +33,10 @@ void newVariable(std::string name,int type);
 %token ASSIGN
 %token bracketS bracketE
 %token <pid> pidentifier
-%token <pid,intval> pidentifierTable
+%token <tab> pidentifierTable
 %token <intval> num
 /*TYPES*/
-%type <intval> expression value identifier
+%type <tab> identifier
 /*OPERATIONS*/
 %left '+' '-'
 %left '*' '/' '%'
@@ -41,7 +46,7 @@ program		: VAR
 			vdeclarations 
 		BEG 								{}
 			commands 
-		END								{}
+		END								{addOperation(HALT, -1);codeOffset++;}
 		;
 
 vdeclarations	: /* empty */							
@@ -54,34 +59,29 @@ commands	: /*empty*/
 		| command							{}
 		;
 
-command		: identifier ASSIGN expression					{addOperation(STORE, $1);codeOffset++;}	
+command		: identifier ASSIGN expression					{addOperation(STORE, $1->intval);codeOffset++;}	
 		| IF condition THEN commands ELSE commands ENDIF
 		| IF condition THEN commands ENDIF
 		| WHILE condition DO commands ENDWHILE
 		| FOR pidentifier FROM value TO value DO commands ENDFOR	{}
 		| FOR pidentifier FROM value DOWNTO value DO commands ENDFOR	{}
-		| READ identifier						{addOperation(GET, -1);codeOffset++;addOperation(STORE, $2);codeOffset++;}
-		| WRITE value							{}
+		| READ identifier						{addOperation(GET, -1);codeOffset++;
+											if($2->table){
+												addOperation(STOREI, $2->intval);
+											}else{
+												addOperation(STORE, $2->intval);
+											}
+											codeOffset++;}
+		| WRITE value							{addOperation(PUT, -1);codeOffset++;}
 		;
 
-expression	: value
-		| value '+' value						{$$ = $1 + $3;}
-		| value '-' value						{$$ = $1 - $3;}
-		| value '*' value						{$$ = $1 * $3;}
-		| value '/' value						{
-											if($3!=0){
-												$$ = $1 / $3;
-											}else{
-												$$=0;
-											}
-										}
-		| value '%' value						{
-											if($3!=0){
-												$$ = $1 % $3;
-											}else{
-												$$=0;
-											}
-										}
+expression	: value							
+		| value '+' value						{}
+		| value '-' value						{}
+		| value '*' value						{}
+		| value '/' value						{}
+											
+		| value '%' value						{}
 		;
 
 condition	: value '=' value						{}
@@ -92,13 +92,21 @@ condition	: value '=' value						{}
 		| value ">=" value						{}
 		;
 
-value		: num								{printf("DEBUG NUM: %d\n",$1);}
-		| identifier							{}
+value		: num								{addOperation(ZERO, -1);codeOffset++;addOperation(INC, -1);codeOffset++;}
+		| identifier							{if($1->table){
+											addOperation(LOADI, $1->intval);
+										}else{
+											addOperation(LOAD, $1->intval);
+										}
+										codeOffset++;}
 		;
 
 identifier	: pidentifier							{int k=getVar($1);
 										if(k!=-1){
-											$$=k;
+											struct varTab *tempV= (struct varTab*)malloc(sizeof (struct varTab));
+											tempV->intval=k;
+											tempV->table=false;
+											$$=tempV;
 										}else{
 											err++;
 											std::string err1=$1;
@@ -111,7 +119,10 @@ identifier	: pidentifier							{int k=getVar($1);
 										int l=getVar($1);
 										if(k!=-1){
 											if(l!=-1){
-												$$=$3;
+												struct varTab *tempV= (struct varTab*)malloc(sizeof (struct varTab));
+												tempV->intval=k;
+												tempV->table=true;
+												$$=tempV;
 											}else{
 												err++;
 												std::string err1=$1;
@@ -130,7 +141,10 @@ identifier	: pidentifier							{int k=getVar($1);
 										}}
 		| pidentifier '['num']'						{int k=getVar($1);
 										if(k!=-1){
-											$$=k;
+											struct varTab *tempV= (struct varTab*)malloc(sizeof (struct varTab));
+											tempV->intval=k+$3;
+											tempV->table=false;
+											$$=tempV;
 										}else{
 											err++;
 											std::string err1=$1;
@@ -145,8 +159,15 @@ int main(int argc, char* argv[]){
 	err=0;
 	yyparse();
 	if(err==0){
-		for (int i=0;i<instructions.size(); ++i)
-		    std::cout << decodeEnum(instructions.at(i).co)<<' '<<instructions.at(i).arg << ' '<<instructions.at(i).cost <<std::endl;
+		for (int i=0;i<instructions.size(); ++i){
+			std::string agrStr;	
+			if(instructions.at(i).arg==-1){
+				agrStr="";
+			}else{
+				agrStr=std::to_string(instructions.at(i).arg);
+			}
+			std::cout << decodeEnum(instructions.at(i).co)<<' '<<agrStr <<std::endl;
+		}
 	}else{
 		std::cout<<"Compilation ended with "<<err<<" errors\n";
 	}
