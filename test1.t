@@ -1,8 +1,8 @@
 VAR
-  a
+  a b
 BEGIN
- 	a:=1;
-	IF 2=1 THEN
-		a:=3;
-	ENDIF
+ 	a:=0;
+	b:=5;
+	b:=a*b;
+	
 END

@@ -5,8 +5,8 @@ Things to do:
   - variable implementation (done)
   - tables (done)
   - adding (done)
-  - subtraction(done)
-  - multiplication
+  - subtraction(done)[optimalization needed]
+  - multiplication (done)
   - division
   - cond =
   - cond <>

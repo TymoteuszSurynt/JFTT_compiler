@@ -261,10 +261,10 @@ expression	: value								{if($1->variable){
 												}else{
 													addOperationLocal(LOAD, $1->intval);}
 												if($3->table){
-													addOperationLocal(ADDI, $3->intval);
+													addOperationLocal(SUBI, $3->intval);
 												}else{
-													addOperationLocal(ADD, $3->intval);}
-											}else if($1->variable){
+													addOperationLocal(SUB, $3->intval);}
+											}else if($1->variable){//do poprawy
 												if($1->table){
 													addOperationLocal(LOADI, $1->intval);
 												}else{
@@ -316,58 +316,101 @@ expression	: value								{if($1->variable){
 											}
 										}else{
 											if($1->variable && $3->variable){
+												int r1=dataOffset+1;
+												int r2=dataOffset+2;
+												int jump;
 												if($1->table){
 													addOperationLocal(LOADI, $1->intval);
 												}else{
 													addOperationLocal(LOAD, $1->intval);}
-												if($3->table){
-													addOperationLocal(ADDI, $3->intval);
+												addOperationLocal(JZERO,codeOffset+32);
+												if($1->table){
+													addOperationLocal(LOADI, $1->intval);
 												}else{
-													addOperationLocal(ADD, $3->intval);}
-											}else if($1->variable){
-												addOperationLocal(ZERO, -1);
-												if($3->intval!=0)
-													addOperationLocal(INC, -1);
-												int numb=1;
-												int numb1=2;
-												while(numb1<=$3->intval){
-													addOperationLocal(SHL, -1);
-													numb=numb1;
-													numb1=2*numb1;
-												}
-												numb1=numb+1;
-												while(numb1<=$3->intval){
-													addOperationLocal(INC, -1);
-													numb=numb1;
-													numb1=numb1+1;
-												}
-
+													addOperationLocal(LOAD, $1->intval);}
+												addOperationLocal(JZERO,codeOffset+30);
+												addOperationLocal(STORE,r2);
+												addOperationLocal(ZERO,-1);
+												addOperationLocal(INC,-1);
+												addOperationLocal(INC,-1);
+												addOperationLocal(STORE,r1);
+												jump=codeOffset;
+												if($3->table){
+													addOperationLocal(SUBI, $3->intval);
+												}else{
+													addOperationLocal(SUB, $3->intval);}
+												addOperationLocal(JZERO,codeOffset+2);
+												addOperationLocal(JUMP,codeOffset+7);
+												addOperationLocal(LOAD,r2);
+												addOperationLocal(SHL,-1);
+												addOperationLocal(STORE,r2);
+												addOperationLocal(LOAD,r1);
+												addOperationLocal(INC,-1);
+												addOperationLocal(STORE,r1);
+												addOperationLocal(JUMP,jump);
+												addOperationLocal(LOAD,r1);
+												addOperationLocal(SHR,-1);
+												addOperationLocal(INC,-1);
+												addOperationLocal(STORE,r1);
+												jump=codeOffset;
+												if($3->table){
+													addOperationLocal(SUBI, $3->intval);
+												}else{
+													addOperationLocal(SUB, $3->intval);}
+												addOperationLocal(JZERO,codeOffset+2);
+												addOperationLocal(JUMP,codeOffset+7);
+												addOperationLocal(LOAD,r2);
 												if($1->table){
 													addOperationLocal(ADDI, $1->intval);
 												}else{
 													addOperationLocal(ADD, $1->intval);}
-											}else{
-												addOperationLocal(ZERO, -1);
-												if($1->intval!=0)
-													addOperationLocal(INC, -1);
-												int numb=1;
-												int numb1=2;
-												while(numb1<=$1->intval){
-													addOperationLocal(SHL, -1);
-													numb=numb1;
-													numb1=2*numb1;
-												}
-												numb1=numb+1;
-												while(numb1<=$1->intval){
-													addOperationLocal(INC, -1);
-													numb=numb1;
-													numb1=numb1+1;
-												}
-
-												if($3->table){
-													addOperationLocal(ADDI, $3->intval);
+												addOperationLocal(STORE,r2);
+												addOperationLocal(LOAD,r1);
+												addOperationLocal(INC,-1);
+												addOperationLocal(STORE,r1);
+												addOperationLocal(JUMP,jump);
+											}else if($1->variable){
+												if($3->intval!=0){
+													if($1->table){
+														addOperationLocal(LOADI, $1->intval);
+													}else{
+														addOperationLocal(LOAD, $1->intval);}
+													int i=2;
+													while(i<=$3->intval){
+														addOperationLocal(SHL, -1);
+														i=i*2;
+													}
+													i=i/2+1;
+													while(i<=$3->intval){
+														if($1->table){
+															addOperationLocal(ADDI, $1->intval);
+														}else{
+															addOperationLocal(ADD, $1->intval);}
+														i=i+1;
+													}
 												}else{
-													addOperationLocal(ADD, $3->intval);}
+													addOperationLocal(ZERO, -1);}
+											}else{
+												if($1->intval!=0){
+													if($3->table){
+														addOperationLocal(LOADI, $3->intval);
+													}else{
+														addOperationLocal(LOAD, $3->intval);}
+													int i=2;
+													while(i<=$1->intval){
+														addOperationLocal(SHL, -1);
+														i=i*2;
+													}
+													i=i/2+1;
+													while(i<=$1->intval){
+														if($3->table){
+															addOperationLocal(ADDI, $3->intval);
+														}else{
+															addOperationLocal(ADD, $3->intval);}
+														i=i+1;
+													}
+												}else{
+													addOperationLocal(ZERO, -1);}
 											}
 										}}
 		| value '/' value						{if(!$1->variable && !$3->variable){
