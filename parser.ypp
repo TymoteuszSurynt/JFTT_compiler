@@ -265,13 +265,28 @@ expression	: value								{if($1->variable){
 												}else{
 													addOperationLocal(SUB, $3->intval);}
 											}else if($1->variable){//do poprawy
+												addOperationLocal(ZERO, -1);
+												if($1->intval!=0)
+													addOperationLocal(INC, -1);
+												int numb=1;
+												int numb1=2;
+												while(numb1<=$3->intval){
+													addOperationLocal(SHL, -1);
+													numb=numb1;
+													numb1=2*numb1;
+												}
+												numb1=numb+1;
+												while(numb1<=$3->intval){
+													addOperationLocal(INC, -1);
+													numb=numb1;
+													numb1=numb1+1;
+												}
+												addOperationLocal(STORE, dataOffset+1);
 												if($1->table){
 													addOperationLocal(LOADI, $1->intval);
 												}else{
 													addOperationLocal(LOAD, $1->intval);}
-												for(int i=0;i<$3->intval;i++){
-													addOperationLocal(DEC, -1);
-												}
+												addOperationLocal(SUB, dataOffset+1);
 											}else{
 												addOperationLocal(ZERO, -1);
 												if($1->intval!=0)
@@ -468,9 +483,9 @@ expression	: value								{if($1->variable){
 
 condition	: value '=' value						{if(!$1->variable && !$3->variable){
 											if($1->intval==$3->intval){
-												addOperationLocal(ZERO, -1);addOperationLocal(INC, -1);
-											}else{
 												addOperationLocal(ZERO, -1);
+											}else{
+												addOperationLocal(ZERO, -1);addOperationLocal(INC, -1);
 											}
 										}else{
 											if($1->variable && $3->variable){
@@ -478,11 +493,18 @@ condition	: value '=' value						{if(!$1->variable && !$3->variable){
 													addOperationLocal(LOADI, $1->intval);
 												}else{
 													addOperationLocal(LOAD, $1->intval);}
-												addOperationLocal(INC, -1);
 												if($3->table){
 													addOperationLocal(SUBI, $3->intval);
 												}else{
 													addOperationLocal(SUB, $3->intval);}
+												if($3->table){
+													addOperationLocal(ADDI, $3->intval);
+												}else{
+													addOperationLocal(ADD, $3->intval);}
+												if($1->table){
+													addOperationLocal(LOADI, $1->intval);
+												}else{
+													addOperationLocal(LOAD, $1->intval);}
 											}else if($1->variable){
 												addOperationLocal(ZERO, -1);
 												if($3->intval!=0)
@@ -500,11 +522,17 @@ condition	: value '=' value						{if(!$1->variable && !$3->variable){
 													numb=numb1;
 													numb1=numb1+1;
 												}
-												addOperationLocal(INC, -1);
+												addOperationLocal(STORE, dataOffset+1);
 												if($1->table){
 													addOperationLocal(SUBI, $1->intval);
 												}else{
 													addOperationLocal(SUB, $1->intval);}
+												if($1->table){
+													addOperationLocal(ADDI, $1->intval);
+												}else{
+													addOperationLocal(ADD, $1->intval);}
+												addOperationLocal(SUB, dataOffset+1);
+												
 											}else{
 												addOperationLocal(ZERO, -1);
 												if($1->intval!=0)
@@ -522,11 +550,16 @@ condition	: value '=' value						{if(!$1->variable && !$3->variable){
 													numb=numb1;
 													numb1=numb1+1;
 												}
-												addOperationLocal(INC, -1);
+												addOperationLocal(STORE, dataOffset+1);
 												if($3->table){
 													addOperationLocal(SUBI, $3->intval);
 												}else{
 													addOperationLocal(SUB, $3->intval);}
+												if($3->table){
+													addOperationLocal(ADDI, $3->intval);
+												}else{
+													addOperationLocal(ADD, $3->intval);}
+												addOperationLocal(SUB, dataOffset+1);
 											}
 										}}
 		| value DIFF value						{printf("Not Equals\n");}
