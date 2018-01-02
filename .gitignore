@@ -3,3 +3,5 @@
 *.tab.hpp
 *.h
 *.output
+*.t
+*.out
