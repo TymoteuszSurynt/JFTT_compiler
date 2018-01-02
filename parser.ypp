@@ -77,8 +77,9 @@ commands	: commands command						{}
 command		: identifier ASSIGN expression ';'				{addOperationLocal(STORE, $1->intval);}	
 		/*IF+ELSE*/
 		| IF condition							{$1=newLabel();
+										addOperationLocal(JZERO, codeOffset+2);
 										$1->jumpFalse=codeOffset;
-										addOperationLocal(JZERO, -1);}
+										addOperationLocal(JUMP, -1);}
 			commands						{$1->goTo=codeOffset;addOperationLocal(JUMP, -1);changeOperation($1->jumpFalse,codeOffset);}
 		THEN 								
 		ELSE commands							
@@ -86,8 +87,9 @@ command		: identifier ASSIGN expression ';'				{addOperationLocal(STORE, $1->int
 		/*IF*/
 		| IF condition 							
 		THEN 								{$1=newLabel();
+										addOperationLocal(JZERO, codeOffset+2);
 										$1->jumpFalse=codeOffset;
-										addOperationLocal(JZERO, -1);}
+										addOperationLocal(JUMP, -1);}
 			commands							
 		ENDIF								{changeOperation($1->jumpFalse,codeOffset);}	
 		/*WHILE*/
@@ -185,6 +187,7 @@ expression	: value								{if($1->variable){
 													addOperationLocal(LOADI, $1->intval);
 												}else{
 													addOperationLocal(LOAD, $1->intval);}
+												
 												if($3->table){
 													addOperationLocal(ADDI, $3->intval);
 												}else{
@@ -281,12 +284,12 @@ expression	: value								{if($1->variable){
 													numb=numb1;
 													numb1=numb1+1;
 												}
-												addOperationLocal(STORE, dataOffset+1);
+												addOperationLocal(STORE, dataOffset);
 												if($1->table){
 													addOperationLocal(LOADI, $1->intval);
 												}else{
 													addOperationLocal(LOAD, $1->intval);}
-												addOperationLocal(SUB, dataOffset+1);
+												addOperationLocal(SUB, dataOffset);
 											}else{
 												addOperationLocal(ZERO, -1);
 												if($1->intval!=0)
@@ -331,8 +334,8 @@ expression	: value								{if($1->variable){
 											}
 										}else{
 											if($1->variable && $3->variable){
-												int r1=dataOffset+1;
-												int r2=dataOffset+2;
+												int r1=dataOffset;
+												int r2=dataOffset+1;
 												int jump;
 												if($1->table){
 													addOperationLocal(LOADI, $1->intval);
@@ -502,9 +505,9 @@ condition	: value '=' value						{if(!$1->variable && !$3->variable){
 												}else{
 													addOperationLocal(ADD, $3->intval);}
 												if($1->table){
-													addOperationLocal(LOADI, $1->intval);
+													addOperationLocal(SUBI, $1->intval);
 												}else{
-													addOperationLocal(LOAD, $1->intval);}
+													addOperationLocal(SUB, $1->intval);}
 											}else if($1->variable){
 												addOperationLocal(ZERO, -1);
 												if($3->intval!=0)
@@ -522,7 +525,7 @@ condition	: value '=' value						{if(!$1->variable && !$3->variable){
 													numb=numb1;
 													numb1=numb1+1;
 												}
-												addOperationLocal(STORE, dataOffset+1);
+												addOperationLocal(STORE, dataOffset);
 												if($1->table){
 													addOperationLocal(SUBI, $1->intval);
 												}else{
@@ -531,7 +534,7 @@ condition	: value '=' value						{if(!$1->variable && !$3->variable){
 													addOperationLocal(ADDI, $1->intval);
 												}else{
 													addOperationLocal(ADD, $1->intval);}
-												addOperationLocal(SUB, dataOffset+1);
+												addOperationLocal(SUB, dataOffset);
 												
 											}else{
 												addOperationLocal(ZERO, -1);
@@ -550,7 +553,7 @@ condition	: value '=' value						{if(!$1->variable && !$3->variable){
 													numb=numb1;
 													numb1=numb1+1;
 												}
-												addOperationLocal(STORE, dataOffset+1);
+												addOperationLocal(STORE, dataOffset);
 												if($3->table){
 													addOperationLocal(SUBI, $3->intval);
 												}else{
@@ -559,12 +562,237 @@ condition	: value '=' value						{if(!$1->variable && !$3->variable){
 													addOperationLocal(ADDI, $3->intval);
 												}else{
 													addOperationLocal(ADD, $3->intval);}
-												addOperationLocal(SUB, dataOffset+1);
+												addOperationLocal(SUB, dataOffset);
 											}
 										}}
-		| value DIFF value						{printf("Not Equals\n");}
-		| value '<' value						{printf("Smaller\n");}
-		| value '>' value						{printf("Bigger\n");}
+		| value DIFF value						{if(!$1->variable && !$3->variable){
+											if($1->intval==$3->intval){
+												addOperationLocal(ZERO, -1);addOperationLocal(INC, -1);
+											}else{
+												addOperationLocal(ZERO, -1);
+											}
+										}else{
+											if($1->variable && $3->variable){
+												if($1->table){
+													addOperationLocal(LOADI, $1->intval);
+												}else{
+													addOperationLocal(LOAD, $1->intval);}
+												if($3->table){
+													addOperationLocal(SUBI, $3->intval);
+												}else{
+													addOperationLocal(SUB, $3->intval);}
+												if($3->table){
+													addOperationLocal(ADDI, $3->intval);
+												}else{
+													addOperationLocal(ADD, $3->intval);}
+												if($1->table){
+													addOperationLocal(SUBI, $1->intval);
+												}else{
+													addOperationLocal(SUB, $1->intval);}
+												addOperationLocal(JZERO, codeOffset+3);
+												addOperationLocal(ZERO, -1);
+												addOperationLocal(JUMP, codeOffset+2);
+												addOperationLocal(INC, -1);
+												
+											}else if($1->variable){
+												addOperationLocal(ZERO, -1);
+												if($3->intval!=0)
+													addOperationLocal(INC, -1);
+												int numb=1;
+												int numb1=2;
+												while(numb1<=$3->intval){
+													addOperationLocal(SHL, -1);
+													numb=numb1;
+													numb1=2*numb1;
+												}
+												numb1=numb+1;
+												while(numb1<=$3->intval){
+													addOperationLocal(INC, -1);
+													numb=numb1;
+													numb1=numb1+1;
+												}
+												addOperationLocal(STORE, dataOffset);
+												if($1->table){
+													addOperationLocal(SUBI, $1->intval);
+												}else{
+													addOperationLocal(SUB, $1->intval);}
+												if($1->table){
+													addOperationLocal(ADDI, $1->intval);
+												}else{
+													addOperationLocal(ADD, $1->intval);}
+												addOperationLocal(SUB, dataOffset);
+												addOperationLocal(JZERO, codeOffset+3);
+												addOperationLocal(ZERO, -1);
+												addOperationLocal(JUMP, codeOffset+2);
+												addOperationLocal(INC, -1);
+												
+											}else{
+												addOperationLocal(ZERO, -1);
+												if($1->intval!=0)
+													addOperationLocal(INC, -1);
+												int numb=1;
+												int numb1=2;
+												while(numb1<=$1->intval){
+													addOperationLocal(SHL, -1);
+													numb=numb1;
+													numb1=2*numb1;
+												}
+												numb1=numb+1;
+												while(numb1<=$1->intval){
+													addOperationLocal(INC, -1);
+													numb=numb1;
+													numb1=numb1+1;
+												}
+												addOperationLocal(STORE, dataOffset);
+												if($3->table){
+													addOperationLocal(SUBI, $3->intval);
+												}else{
+													addOperationLocal(SUB, $3->intval);}
+												if($3->table){
+													addOperationLocal(ADDI, $3->intval);
+												}else{
+													addOperationLocal(ADD, $3->intval);}
+												addOperationLocal(SUB, dataOffset);
+												addOperationLocal(JZERO, codeOffset+3);
+												addOperationLocal(ZERO, -1);
+												addOperationLocal(JUMP, codeOffset+2);
+												addOperationLocal(INC, -1);
+											}
+										}}
+		| value '<' value						{if(!$1->variable && !$3->variable){
+											if($1->intval<$3->intval){
+												addOperationLocal(ZERO, -1);
+											}else{
+												addOperationLocal(ZERO, -1);addOperationLocal(INC, -1);
+											}
+										}else{
+											if($1->variable && $3->variable){
+												if($1->table){
+													addOperationLocal(LOADI, $1->intval);
+												}else{
+													addOperationLocal(LOAD, $1->intval);}
+												addOperationLocal(INC, -1);
+												if($3->table){
+													addOperationLocal(SUBI, $3->intval);
+												}else{
+													addOperationLocal(SUB, $3->intval);}
+											}else if($1->variable){
+												addOperationLocal(ZERO, -1);
+												if($3->intval!=0)
+													addOperationLocal(INC, -1);
+												int numb=1;
+												int numb1=2;
+												while(numb1<=$3->intval){
+													addOperationLocal(SHL, -1);
+													numb=numb1;
+													numb1=2*numb1;
+												}
+												numb1=numb+1;
+												while(numb1<=$3->intval){
+													addOperationLocal(INC, -1);
+													numb=numb1;
+													numb1=numb1+1;
+												}
+												addOperationLocal(STORE, dataOffset);
+												if($1->table){
+													addOperationLocal(LOADI, $1->intval);
+												}else{
+													addOperationLocal(LOAD, $1->intval);}
+												addOperationLocal(INC, -1);
+												addOperationLocal(SUB, dataOffset);
+												
+											}else{
+												addOperationLocal(ZERO, -1);
+												if($1->intval!=0)
+													addOperationLocal(INC, -1);
+												int numb=1;
+												int numb1=2;
+												while(numb1<=$1->intval){
+													addOperationLocal(SHL, -1);
+													numb=numb1;
+													numb1=2*numb1;
+												}
+												numb1=numb+1;
+												while(numb1<=$1->intval){
+													addOperationLocal(INC, -1);
+													numb=numb1;
+													numb1=numb1+1;
+												}
+												addOperationLocal(INC, -1);
+												if($3->table){
+													addOperationLocal(SUBI, $3->intval);
+												}else{
+													addOperationLocal(SUB, $3->intval);}
+											}
+										}}
+		| value '>' value						{if(!$1->variable && !$3->variable){
+											if($1->intval>$3->intval){
+												addOperationLocal(ZERO, -1);
+											}else{
+												addOperationLocal(ZERO, -1);addOperationLocal(INC, -1);
+											}
+										}else{
+											if($1->variable && $3->variable){
+												if($3->table){
+													addOperationLocal(LOADI, $3->intval);
+												}else{
+													addOperationLocal(LOAD, $3->intval);}
+												addOperationLocal(INC, -1);
+												if($1->table){
+													addOperationLocal(SUBI, $1->intval);
+												}else{
+													addOperationLocal(SUB, $1->intval);}
+											}else if($1->variable){
+												addOperationLocal(ZERO, -1);
+												if($3->intval!=0)
+													addOperationLocal(INC, -1);
+												int numb=1;
+												int numb1=2;
+												while(numb1<=$3->intval){
+													addOperationLocal(SHL, -1);
+													numb=numb1;
+													numb1=2*numb1;
+												}
+												numb1=numb+1;
+												while(numb1<=$3->intval){
+													addOperationLocal(INC, -1);
+													numb=numb1;
+													numb1=numb1+1;
+												}
+												addOperationLocal(INC, -1);
+												if($1->table){
+													addOperationLocal(SUBI, $1->intval);
+												}else{
+													addOperationLocal(SUB, $1->intval);}
+												
+												
+												
+											}else{
+												addOperationLocal(ZERO, -1);
+												if($1->intval!=0)
+													addOperationLocal(INC, -1);
+												int numb=1;
+												int numb1=2;
+												while(numb1<=$1->intval){
+													addOperationLocal(SHL, -1);
+													numb=numb1;
+													numb1=2*numb1;
+												}
+												numb1=numb+1;
+												while(numb1<=$1->intval){
+													addOperationLocal(INC, -1);
+													numb=numb1;
+													numb1=numb1+1;
+												}
+												addOperationLocal(STORE, dataOffset);
+												if($3->table){
+													addOperationLocal(LOAD, $3->intval);
+												}else{
+													addOperationLocal(LOAD, $3->intval);}
+												addOperationLocal(INC, -1);
+												addOperationLocal(SUB, dataOffset);
+											}
+										}}
 		| value SOE value						{printf("Smaller Or Equal\n");}
 		| value BOE value						{printf("Bigger Or Equal\n");}
 		;
@@ -591,7 +819,6 @@ identifier	: pidentifier							{int k=getVar($1);
 											tempV->table=false;
 											$$=tempV;
 										}else{
-											err++;
 											std::string err1=$1;
 											std::string error="Variable \""+err1+"\" not defined!\n";
 											char * temp=new char[error.size()+1];
@@ -607,7 +834,6 @@ identifier	: pidentifier							{int k=getVar($1);
 												tempV->table=true;
 												$$=tempV;
 											}else{
-												err++;
 												std::string err1=$1;
 												std::string error="Variable \""+err1+"\" not defined!\n";
 												char * temp=new char[error.size()+1];
@@ -615,7 +841,6 @@ identifier	: pidentifier							{int k=getVar($1);
 												yyerror(temp);
 											}	
 										}else{
-											err++;
 											std::string err1=$3;
 											std::string error="Variable \""+err1+"\" not defined!\n";
 											char * temp=new char[error.size()+1];
@@ -629,7 +854,6 @@ identifier	: pidentifier							{int k=getVar($1);
 											tempV->table=false;
 											$$=tempV;
 										}else{
-											err++;
 											std::string err1=$1;
 											std::string error="Variable \""+err1+"\" not defined!\n";
 											char * temp=new char[error.size()+1];
@@ -649,7 +873,8 @@ int main(int argc, char* argv[]){
 			}else{
 				agrStr=std::to_string(instructions.at(i).arg);
 			}
-			std::cout <<i<<' '<<decodeEnum(instructions.at(i).co)<<' '<<agrStr <<std::endl;
+			// <<i<<' '
+			std::cout<<decodeEnum(instructions.at(i).co)<<' '<<agrStr <<std::endl;
 		}
 	}else{
 		std::cout<<"Compilation ended with "<<err<<" errors\n";
@@ -658,11 +883,10 @@ int main(int argc, char* argv[]){
 	return 0;
 }
 /*yyerror*/
-void yyerror (char *msg) { printf("Error: %s\n", msg); }
+void yyerror (char *msg) { err++;printf("Error: %s\n", msg); }
 /*STABLE FUNCTIONS*/
 void newVariable(std::string name,int type){
 	if(!addVar(name)){
-		err++;
 		yyerror("Duplicate initialization\n");
 	}else{
 		stable[name].offset=dataLocation(type);

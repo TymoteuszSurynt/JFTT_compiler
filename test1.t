@@ -1,8 +1,9 @@
 VAR
-  a b
+  a b c
 BEGIN
- 	a:=0;
-	b:=5;
-	b:=a*b;
+ 	a:=10;
+	b:=7;
+	c:=a*3;
+	WRITE c;
 	
 END

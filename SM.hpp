@@ -47,6 +47,8 @@ std::string decodeEnum(enum codeOptions option){
 		case STOREI:
 			return "STOREI";
 		case ADD:
+			return "ADD";
+		case ADDI:
 			return "ADDI";
 		case SUB:
 			return "SUB";

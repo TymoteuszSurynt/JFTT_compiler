@@ -1,17 +1,19 @@
 # Bison/Flex compiler
 
 Things to do:
-  - project template (done)
-  - variable implementation (done)
+  - project template (done)(tested)
+  - variable implementation (done)(tested)
   - tables (done)
-  - adding (done)
-  - subtraction(done)[optimalization needed]
+  - adding (done)(tested)
+  - subtraction(done)(tested)
   - multiplication (done)
   - division
-  - cond =
-  - cond <>
-  - cond <
-  - cond >
+  - IF (done)(tested)
+  - IF+ELSE (done)
+  - cond = (done)(tested)
+  - cond <> (done)(tested)
+  - cond <  (done)(tested)
+  - cond > (done)(tested)
   - cond <=
   - cond >=
   - WHILE (done)
