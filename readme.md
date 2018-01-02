@@ -10,7 +10,7 @@ Things to do:
   - division
   - remainder
   - IF (done)(tested)
-  - IF+ELSE (done)(conflict)
+  - IF+ELSE (done)(tested)
   - cond = (done)(tested)
   - cond <> (done)(tested)
   - cond <  (done)(tested)
@@ -19,4 +19,4 @@ Things to do:
   - cond >= (done)(tested)
   - WHILE (done)(tested)
   - FOR UP (done)(tested)
-  - FOR DOWN (done)(conflict)
+  - FOR DOWN (done)(tested)
