@@ -14,7 +14,7 @@ Things to do:
   - cond <> (done)(tested)
   - cond <  (done)(tested)
   - cond > (done)(tested)
-  - cond <=
-  - cond >=
+  - cond <= (done)(tested)
+  - cond >= (done)(tested)
   - WHILE (done)
   - FOR x2

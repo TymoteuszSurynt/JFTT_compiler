@@ -1,9 +1,11 @@
 VAR
   a b c
 BEGIN
- 	a:=10;
-	b:=7;
-	c:=a*3;
-	WRITE c;
+ 	a:=14;
+	b:=15;
+	c:=666;
+	IF b<=a THEN
+		WRITE c;
+	ENDIF
 	
 END
