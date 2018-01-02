@@ -24,4 +24,8 @@ int getVar(std::string name){
 		return it->second.offset;
 	}
 	return -1;
+}
+void removeVar(std::string name){
+	stable.erase(name);
 } 
+

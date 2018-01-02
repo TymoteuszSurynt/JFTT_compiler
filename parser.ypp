@@ -15,6 +15,7 @@ void yyerror (char *msg);
 /*MY FUNCTIONS*/
 void newVariable(std::string name,int type);
 struct labels* newLabel();
+struct varTabFor* newFor();
 void addOperationLocal(enum codeOptions option, int arg);
 struct varTab{
 	int intval;
@@ -24,6 +25,12 @@ struct varTabMath{
 	int intval;
 	bool variable;
 	bool table;
+};
+struct varTabFor{
+	int start;
+	int iterator;
+	int end;
+	int change;
 };
 struct labels{
 	int goTo;
@@ -36,12 +43,14 @@ struct labels{
 	char * pid;
 	struct varTab *tab;
 	struct varTabMath *tab2;
+	struct varTabFor *tab3;
 	struct labels *label;
 }
 %start program
 /*TOKENS*/
 %token VAR BEG END
-%token <label> IF WHILE FOR
+%token <label> IF WHILE
+%token <tab3>FOR
 %token FROM TO DOWNTO DO THEN ELSE ENDFOR ENDWHILE ENDIF
 %token READ WRITE
 %token SOE BOE DIFF
@@ -70,19 +79,25 @@ vdeclarations	: /* empty */
 		| vdeclarations pidentifier '[' num ']' 			{newVariable($2,$4);}
 		;
 
-commands	: commands command						{}
-		| command							{}
+commands	: commands command						
+		| command							
 		;
 
-command		: identifier ASSIGN expression ';'				{addOperationLocal(STORE, $1->intval);}	
+command		: identifier ASSIGN expression ';'				{if($1->table){
+											addOperationLocal(STOREI, $1->intval);
+										}else{
+											addOperationLocal(STORE, $1->intval);
+										}}	
 		/*IF+ELSE*/
 		| IF condition							{$1=newLabel();
 										addOperationLocal(JZERO, codeOffset+2);
 										$1->jumpFalse=codeOffset;
 										addOperationLocal(JUMP, -1);}
+		THEN
 			commands						{$1->goTo=codeOffset;addOperationLocal(JUMP, -1);changeOperation($1->jumpFalse,codeOffset);}
-		THEN 								
-		ELSE commands							
+		 								
+		ELSE 
+			commands							
 		ENDIF								{changeOperation($1->goTo,codeOffset);}	
 		/*IF*/
 		| IF condition 							
@@ -90,18 +105,145 @@ command		: identifier ASSIGN expression ';'				{addOperationLocal(STORE, $1->int
 										addOperationLocal(JZERO, codeOffset+2);
 										$1->jumpFalse=codeOffset;
 										addOperationLocal(JUMP, -1);}
-			commands							
-		ENDIF								{changeOperation($1->jumpFalse,codeOffset);}	
+			commands						{changeOperation($1->jumpFalse,codeOffset);}	
+		ENDIF									
 		/*WHILE*/
-		| WHILE	condition						{$1=newLabel();
+		| WHILE								{$1=newLabel();
 										$1->jumpFalse=codeOffset;
-										addOperationLocal(JZERO, -1);}
-		DO commands 							{changeOperation($1->jumpFalse,codeOffset);}
+										}
+			condition						{addOperationLocal(JZERO, codeOffset+2);$1->goTo=codeOffset;addOperationLocal(JUMP, -1);}
+		DO 
+			commands 						{changeOperation($1->goTo,codeOffset+1);addOperationLocal(JUMP, $1->jumpFalse);}
 		ENDWHILE
 		/*FOR+TO*/
-		| FOR pidentifier FROM value TO value DO commands ENDFOR	{}
+		| FOR 								
+			pidentifier						{newVariable($2,1);$1=newFor();$1->iterator=getVar($2);}
+		FROM	
+			value							{
+										if($5->variable){
+											if($5->table){
+												addOperationLocal(LOADI, $5->intval);
+											}else{
+												addOperationLocal(LOAD, $5->intval);
+											}
+											
+										}else{
+											addOperationLocal(ZERO, -1);
+											if($5->intval!=0)
+												addOperationLocal(INC, -1);
+											int numb=1;
+											int numb1=2;
+											while(numb1<=$5->intval){
+												addOperationLocal(SHL, -1);
+												numb=numb1;
+												numb1=2*numb1;
+											}
+											numb1=numb+1;
+											while(numb1<=$5->intval){
+												addOperationLocal(INC, -1);
+												numb=numb1;
+												numb1=numb1+1;
+											}
+										}
+										addOperationLocal(STORE, $1->iterator);}
+		TO
+			value							{
+										if($8->variable){
+											if($8->table){
+												addOperationLocal(LOADI, $8->intval);
+											}else{
+												addOperationLocal(LOAD, $8->intval);
+											}
+											
+										}else{
+											addOperationLocal(ZERO, -1);
+											if($8->intval!=0)
+												addOperationLocal(INC, -1);
+											int numb=1;
+											int numb1=2;
+											while(numb1<=$8->intval){
+												addOperationLocal(SHL, -1);
+												numb=numb1;
+												numb1=2*numb1;
+											}
+											numb1=numb+1;
+											while(numb1<=$8->intval){
+												addOperationLocal(INC, -1);
+												numb=numb1;
+												numb1=numb1+1;
+											}
+										}
+										addOperationLocal(STORE, dataOffset);$1->end=dataOffset;dataOffset++;}
+		DO								{addOperationLocal(LOAD, $1->end);addOperationLocal(INC, -1);
+										addOperationLocal(SUB, $1->iterator);$1->change=codeOffset;addOperationLocal(JZERO, -1);
+										$1->start=codeOffset;}
+			commands						{addOperationLocal(LOAD, $1->iterator);addOperationLocal(INC, -1);addOperationLocal(STORE, $1->iterator);
+										addOperationLocal(SUB, $1->end);addOperationLocal(JZERO, $1->start);}
+		ENDFOR								{changeOperation($1->change,codeOffset);removeVar($2);}
 		/*FOR+DOWNTO*/
-		| FOR pidentifier FROM value DOWNTO value DO commands ENDFOR	{}
+		| FOR 								
+			pidentifier						{newVariable($2,1);$1=newFor();$1->iterator=getVar($2);}
+		FROM	
+			value							{
+										if($5->variable){
+											if($5->table){
+												addOperationLocal(LOADI, $5->intval);
+											}else{
+												addOperationLocal(LOAD, $5->intval);
+											}
+											
+										}else{
+											addOperationLocal(ZERO, -1);
+											if($5->intval!=0)
+												addOperationLocal(INC, -1);
+											int numb=1;
+											int numb1=2;
+											while(numb1<=$5->intval){
+												addOperationLocal(SHL, -1);
+												numb=numb1;
+												numb1=2*numb1;
+											}
+											numb1=numb+1;
+											while(numb1<=$5->intval){
+												addOperationLocal(INC, -1);
+												numb=numb1;
+												numb1=numb1+1;
+											}
+										}
+										addOperationLocal(STORE, $1->iterator);}
+		TO
+			value							{
+										if($8->variable){
+											if($8->table){
+												addOperationLocal(LOADI, $8->intval);
+											}else{
+												addOperationLocal(LOAD, $8->intval);
+											}
+											
+										}else{
+											addOperationLocal(ZERO, -1);
+											if($8->intval!=0)
+												addOperationLocal(INC, -1);
+											int numb=1;
+											int numb1=2;
+											while(numb1<=$8->intval){
+												addOperationLocal(SHL, -1);
+												numb=numb1;
+												numb1=2*numb1;
+											}
+											numb1=numb+1;
+											while(numb1<=$8->intval){
+												addOperationLocal(INC, -1);
+												numb=numb1;
+												numb1=numb1+1;
+											}
+										}
+										addOperationLocal(STORE, dataOffset);$1->end=dataOffset;dataOffset++;}
+		DO								{addOperationLocal(LOAD, $1->iterator);addOperationLocal(INC, -1);
+										addOperationLocal(SUB, $1->end);$1->change=codeOffset;addOperationLocal(JZERO, -1);$1->start=codeOffset;}
+			commands						{addOperationLocal(LOAD, $1->iterator);addOperationLocal(DEC, -1);addOperationLocal(STORE, $1->iterator);
+										addOperationLocal(SUB, $1->end);addOperationLocal(JZERO, codeOffset+2);addOperationLocal(JUMP, $1->start);}
+		ENDFOR								{removeVar($2);changeOperation($1->change,codeOffset);}
 		/*READ+WRITE*/
 		| READ identifier ';'						{addOperationLocal(GET, -1);
 											if($2->table){
@@ -267,9 +409,9 @@ expression	: value								{if($1->variable){
 													addOperationLocal(SUBI, $3->intval);
 												}else{
 													addOperationLocal(SUB, $3->intval);}
-											}else if($1->variable){//do poprawy
+											}else if($1->variable){
 												addOperationLocal(ZERO, -1);
-												if($1->intval!=0)
+												if($3->intval!=0)
 													addOperationLocal(INC, -1);
 												int numb=1;
 												int numb1=2;
@@ -363,7 +505,7 @@ expression	: value								{if($1->variable){
 												addOperationLocal(SHL,-1);
 												addOperationLocal(STORE,r2);
 												addOperationLocal(LOAD,r1);
-												addOperationLocal(INC,-1);
+												addOperationLocal(SHL,-1);
 												addOperationLocal(STORE,r1);
 												addOperationLocal(JUMP,jump);
 												addOperationLocal(LOAD,r1);
@@ -454,13 +596,19 @@ expression	: value								{if($1->variable){
 												numb1=numb1+1;
 											}
 										}else{
-
+											if($1->variable && $3->variable){
+												
+											}else if($1->variable){
+												
+											}else{
+												
+											}
 										}}
 											
 		| value '%' value						{if(!$1->variable && !$3->variable){
 											int max;
 											if($3->intval!=0)
-												max=$1->intval%$3->intval;
+												max=$1->intval/$3->intval;
 											else
 												max=0;
 											addOperationLocal(ZERO, -1);
@@ -480,7 +628,13 @@ expression	: value								{if($1->variable){
 												numb1=numb1+1;
 											}
 										}else{
-
+											if($1->variable && $3->variable){
+												
+											}else if($1->variable){
+												
+											}else{
+												
+											}
 										}}
 		;
 
@@ -1021,6 +1175,9 @@ void newVariable(std::string name,int type){
 /*OTHER FUNCTIONS*/
 struct labels* newLabel(){
 	return (struct labels*) malloc(sizeof(struct labels));
+}
+struct varTabFor* newFor(){
+	return (struct varTabFor*) malloc(sizeof(struct varTabFor));
 }
 void addOperationLocal(enum codeOptions option, int arg){
 	addOperation(option,arg);

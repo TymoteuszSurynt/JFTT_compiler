@@ -3,18 +3,20 @@
 Things to do:
   - project template (done)(tested)
   - variable implementation (done)(tested)
-  - tables (done)
+  - tables (done)(tested)
   - adding (done)(tested)
   - subtraction(done)(tested)
   - multiplication (done)
   - division
+  - remainder
   - IF (done)(tested)
-  - IF+ELSE (done)
+  - IF+ELSE (done)(conflict)
   - cond = (done)(tested)
   - cond <> (done)(tested)
   - cond <  (done)(tested)
   - cond > (done)(tested)
   - cond <= (done)(tested)
   - cond >= (done)(tested)
-  - WHILE (done)
-  - FOR x2
+  - WHILE (done)(tested)
+  - FOR UP (done)(tested)
+  - FOR DOWN (done)(conflict)
