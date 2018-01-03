@@ -6,9 +6,9 @@ Things to do:
   - tables (done)(tested)
   - adding (done)(tested)
   - subtraction(done)(tested)
-  - multiplication (done)
-  - division
-  - remainder
+  - multiplication (done)(tested)
+  - division (!)
+  - remainder (!)
   - IF (done)(tested)
   - IF+ELSE (done)(tested)
   - cond = (done)(tested)
@@ -20,4 +20,4 @@ Things to do:
   - WHILE (done)(tested)
   - FOR UP (done)(tested)
   - FOR DOWN (done)(tested)
-  - lines
+  - lines (!)
