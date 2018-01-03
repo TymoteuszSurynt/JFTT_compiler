@@ -20,4 +20,5 @@ Things to do:
   - WHILE (done)(tested)
   - FOR UP (done)(tested)
   - FOR DOWN (done)(tested)
-  - lines (!)
+  - lines (done)(tested)
+  - variable testing (!)

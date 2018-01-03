@@ -1,6 +1,7 @@
 %{
 extern "C" int yylex(); 
 extern "C" int yyparse();
+extern int yylineno;
 #include <iostream>
 #include <cstdlib>
 #include <cstdio>
@@ -13,16 +14,18 @@ int err;
 int yylex(void);
 void yyerror (char *msg);
 /*MY FUNCTIONS*/
-void newVariable(std::string name,int type);
+void newVariable(std::string name,bool type);
 struct labels* newLabel();
 struct varTabFor* newFor();
 void getNumber(long long n);
 void addOperationLocal(enum codeOptions option, int arg);
 struct varTab{
+	char* name;
 	long long intval;
 	bool table;
 };	
 struct varTabMath{
+	char* name;
 	long long intval;
 	bool variable;
 	bool table;
@@ -75,15 +78,16 @@ program		: VAR
 		;
 
 vdeclarations	: /* empty */							
-		| vdeclarations pidentifier					{newVariable($2,1);}
-		| vdeclarations pidentifier '[' num ']' 			{newVariable($2,$4);}
+		| vdeclarations pidentifier					{newVariable($2,false);}
+		| vdeclarations pidentifier '[' num ']' 			{newVariable($2,true);}
 		;
 
 commands	: commands command						
 		| command							
 		;
 
-command		: identifier ASSIGN expression ';'				{if($1->table){
+command		: identifier ASSIGN expression ';'				{setInit(std::string($1->name));
+										if($1->table){
 											addOperationLocal(STOREI, $1->intval);
 										}else{
 											addOperationLocal(STORE, $1->intval);
@@ -113,7 +117,7 @@ command		: identifier ASSIGN expression ';'				{if($1->table){
 		| FOR 								
 			pidentifier						
 		FROM	
-			value							{newVariable($2,1);$1=newFor();$1->iterator=getVar($2);
+			value							{newVariable($2,false);$1=newFor();$1->iterator=getVar($2);
 										if($4->variable){
 											if($4->table){
 												addOperationLocal(LOADI, $4->intval);
@@ -148,7 +152,7 @@ command		: identifier ASSIGN expression ';'				{if($1->table){
 		| FOR 								
 			pidentifier						
 		FROM	
-			value							{newVariable($2,1);$1=newFor();$1->iterator=getVar($2);
+			value							{newVariable($2,false);$1=newFor();$1->iterator=getVar($2);
 										if($4->variable){
 											if($4->table){
 												addOperationLocal(LOADI, $4->intval);
@@ -204,10 +208,12 @@ command		: identifier ASSIGN expression ';'				{if($1->table){
 		;
 
 expression	: value								{if($1->variable){
-											if($1->table){
-												addOperationLocal(LOADI, $1->intval);
-											}else{
-												addOperationLocal(LOAD, $1->intval);
+											if(!getInit(std::string($1->name))){
+												std::string err1($1->name);
+												std::string error="Variable \""+err1+"\" not initialized!\n";
+												char * temp=new char[error.size()+1];
+												strcpy ( temp, error.c_str() );
+												yyerror(temp);
 											}
 											
 										}else{
@@ -282,7 +288,8 @@ expression	: value								{if($1->variable){
 												long long r1=dataOffset;
 												long long r2=dataOffset+1;
 												long long r3=dataOffset+2;
-												long long r4=dataOffset+3;												long long r5=dataOffset+4;
+												long long r4=dataOffset+3;
+												long long r5=dataOffset+4;
 												long long jump;
 												addOperationLocal(ZERO, -1);
 												addOperationLocal(STORE, r1);
@@ -1041,11 +1048,15 @@ condition	: value '=' value						{if(!$1->variable && !$3->variable){
 
 value		: num								{struct varTabMath *tempV= (struct varTabMath*)malloc(sizeof (struct varTabMath));
 										tempV->intval=$1;
+										tempV->name=new char[3];
+										strcpy(tempV->name,"n1");
 										tempV->variable=false;
 										tempV->table=false;
 										$$=tempV;}
 		| identifier							{struct varTabMath *tempV= (struct varTabMath*)malloc(sizeof (struct varTabMath));
 										tempV->intval=$1->intval;
+										tempV->name=new char[sizeof($1->name)+1];
+										strcpy(tempV->name,$1->name);
 										tempV->variable=true;
 										if($1->table)
 											tempV->table=true;
@@ -1055,8 +1066,16 @@ value		: num								{struct varTabMath *tempV= (struct varTabMath*)malloc(sizeof
 		;
 
 identifier	: pidentifier							{long long k=getVar($1);
+										if(getVarTable($1)){
+											std::string err1=$1;
+											std::string error="Variable \""+err1+"\" is not a table!\n";
+											char * temp=new char[error.size()+1];
+											strcpy ( temp, error.c_str() );
+											yyerror(temp);
+										}
 										if(k!=-1){
 											struct varTab *tempV= (struct varTab*)malloc(sizeof (struct varTab));
+											tempV->name=$1;
 											tempV->intval=k;
 											tempV->table=false;
 											$$=tempV;
@@ -1069,10 +1088,18 @@ identifier	: pidentifier							{long long k=getVar($1);
 										}}	
 		| pidentifier '[' pidentifier ']'				{long long k=getVar($3);
 										long long l=getVar($1);
+										if(!getVarTable($1)){
+											std::string err1=$1;
+											std::string error="Variable \""+err1+"\" is a table!\n";
+											char * temp=new char[error.size()+1];
+											strcpy ( temp, error.c_str() );
+											yyerror(temp);
+										}
 										if(k!=-1){
 											if(l!=-1){
 												struct varTab *tempV= (struct varTab*)malloc(sizeof (struct varTab));
 												tempV->intval=k;
+												tempV->name=$1;
 												tempV->table=true;
 												$$=tempV;
 											}else{
@@ -1090,9 +1117,17 @@ identifier	: pidentifier							{long long k=getVar($1);
 											yyerror(temp);
 										}}
 		| pidentifier '['num']'						{long long k=getVar($1);
+										if(!getVarTable($1)){
+											std::string err1=$1;
+											std::string error="Variable \""+err1+"\" is a table!\n";
+											char * temp=new char[error.size()+1];
+											strcpy ( temp, error.c_str() );
+											yyerror(temp);
+										}
 										if(k!=-1){
 											struct varTab *tempV= (struct varTab*)malloc(sizeof (struct varTab));
 											tempV->intval=k+$3;
+											tempV->name=$1;
 											tempV->table=false;
 											$$=tempV;
 										}else{
@@ -1119,16 +1154,16 @@ int main(int argc, char* argv[]){
 			std::cout<<decodeEnum(instructions.at(i).co)<<' '<<agrStr <<std::endl;
 		}
 	}else{
-		std::cout<<"Compilation ended with "<<err<<" errors\n";
+		std::cerr<<"Compilation ended with "<<err<<" errors\n";
 	}
 	
 	return 0;
 }
 /*yyerror*/
-void yyerror (char *msg) { err++;printf("Error: %s\n", msg); }
+void yyerror (char *msg) { err++;std::cerr<<"Error in line "<<yylineno<<": "<<msg<<"\n"; }
 /*STABLE FUNCTIONS*/
-void newVariable(std::string name,int type){
-	if(!addVar(name)){
+void newVariable(std::string name,bool type){
+	if(!addVar(name,type)){
 		yyerror("Duplicate initialization\n");
 	}else{
 		stable[name].offset=dataLocation(type);

@@ -4,17 +4,19 @@
 
 struct variable{
 	std::string name;
-	int offset;	
+	int offset;
+	bool table;
+	bool init;	
 };
 
 std:: map<std::string,variable> stable;
 std::map<std::string,variable>::iterator it;
-bool addVar(std::string name){
+bool addVar(std::string name,bool table){
 	it=stable.find(name);
 	if(it!=stable.end()){
 		return false;
 	}
-	struct variable a{.name = name};
+	struct variable a{.name = name, .offset=0, table = table, .init=false};
 	stable[name]=a;
 	return true;
 }
@@ -25,7 +27,26 @@ long long getVar(std::string name){
 	}
 	return -1;
 }
+bool getVarTable(std::string name){
+	it=stable.find(name);
+	if(it!=stable.end()){
+		return it->second.table;
+	}
+	return false;
+}
 void removeVar(std::string name){
 	stable.erase(name);
 } 
-
+void setInit(std::string name){
+	it=stable.find(name);
+	if(it!=stable.end()){
+		it->second.init=true;
+	}
+}
+bool getInit(std::string name){
+	it=stable.find(name);
+	if(it!=stable.end()){
+		return it->second.init;
+	}
+	return false;
+}
