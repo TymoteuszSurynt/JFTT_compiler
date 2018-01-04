@@ -21,4 +21,4 @@ Things to do:
   - FOR UP (done)(tested)
   - FOR DOWN (done)(tested)
   - lines (done)(tested)
-  - variable testing (!)
+  - variable testing (done)(tested)
