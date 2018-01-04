@@ -947,7 +947,7 @@ condition	: value '=' value						{if(!$1->variable && !$3->variable){
 												}else{
 													addOperationLocal(SUB, $1->intval);}
 												if($1->table){
-													arrayOperation($3->start,$3->intval,ADDI);
+													arrayOperation($1->start,$1->intval,ADDI);
 												}else{
 													addOperationLocal(ADD, $1->intval);}
 												addOperationLocal(SUB, r);
