@@ -31,6 +31,9 @@
 	- ' <= ' - greater or equal
 	- ' > ' - less than
 	- ' >= ' - less than or equal;
+5. Comment:
+	- ' ( ' comment ' ) ', e.g.:
+		- (Some comment)
 
 ### Assembly commands:
 
@@ -55,3 +58,24 @@
 | JZERO j| if a=0, k=j else k=k+1 | 1 | 
 | JODD j| if a is odd k=j else k=k+1 | 1 | 
 | HALT | stop | 0 | 
+
+### Example:
+Input:
+
+```
+VAR
+  a b[10] c
+BEGIN
+READ b[3];
+a:=3;
+c:=0;
+FOR i FROM b[a] DOWNTO 1 DO
+	c:=c+i;
+	IF c>20 THEN
+		WRITE c;
+	ELSE
+		WRITE 20;
+	ENDIF
+ENDFOR
+END
+```
