@@ -19,15 +19,18 @@ struct labels* newLabel();
 struct varTabFor* newFor();
 void getNumber(long long n);
 void addOperationLocal(enum codeOptions option, int arg);
+void arrayOperation(int start, int i, enum codeOptions option);
 void checkVar(char* name);
 struct varTab{
 	char* name;
 	long long intval;
 	bool table;
+	long long start;
 };	
 struct varTabMath{
 	char* name;
 	long long intval;
+	long long start;
 	bool variable;
 	bool table;
 };
@@ -89,7 +92,7 @@ commands	: commands command
 
 command		: identifier ASSIGN expression ';'				{setInit(std::string($1->name));
 										if($1->table){
-											addOperationLocal(STOREI, $1->intval);
+											arrayOperation($1->start,$1->intval,STOREI);
 										}else{
 											addOperationLocal(STORE, $1->intval);
 										}}	
@@ -122,7 +125,7 @@ command		: identifier ASSIGN expression ';'				{setInit(std::string($1->name));
 										if($4->variable){
 											checkVar($4->name);
 											if($4->table){
-												addOperationLocal(LOADI, $4->intval);
+												arrayOperation($4->start,$4->intval,LOADI);
 											}else{
 												addOperationLocal(LOAD, $4->intval);
 											}
@@ -136,7 +139,7 @@ command		: identifier ASSIGN expression ';'				{setInit(std::string($1->name));
 										if($7->variable){
 											checkVar($7->name);
 											if($7->table){
-												addOperationLocal(LOADI, $7->intval);
+												arrayOperation($7->start,$7->intval,LOADI);
 											}else{
 												addOperationLocal(LOAD, $7->intval);
 											}
@@ -159,7 +162,7 @@ command		: identifier ASSIGN expression ';'				{setInit(std::string($1->name));
 										if($4->variable){
 											checkVar($4->name);
 											if($4->table){
-												addOperationLocal(LOADI, $4->intval);
+												arrayOperation($4->start,$4->intval,LOADI);
 											}else{
 												addOperationLocal(LOAD, $4->intval);
 											}
@@ -173,7 +176,7 @@ command		: identifier ASSIGN expression ';'				{setInit(std::string($1->name));
 										if($7->variable){
 											checkVar($7->name);
 											if($7->table){
-												addOperationLocal(LOADI, $7->intval);
+												arrayOperation($7->start,$7->intval,LOADI);
 											}else{
 												addOperationLocal(LOAD, $7->intval);
 											}
@@ -195,7 +198,7 @@ command		: identifier ASSIGN expression ';'				{setInit(std::string($1->name));
 		| READ identifier ';'						{addOperationLocal(GET, -1);
 											setInit(std::string($2->name));
 											if($2->table){
-												addOperationLocal(STOREI, $2->intval);
+												arrayOperation($2->start,$2->intval,STOREI);
 											}else{
 												addOperationLocal(STORE, $2->intval);
 											}
@@ -203,7 +206,7 @@ command		: identifier ASSIGN expression ';'				{setInit(std::string($1->name));
 		| WRITE value ';'						{if($2->variable){
 											checkVar($2->name);
 											if($2->table){
-												addOperationLocal(LOADI, $2->intval);
+												arrayOperation($2->start,$2->intval,LOADI);
 											}else{
 												addOperationLocal(LOAD, $2->intval);
 											}
@@ -217,7 +220,7 @@ command		: identifier ASSIGN expression ';'				{setInit(std::string($1->name));
 expression	: value								{if($1->variable){
 											checkVar($1->name);
 											if($1->table){
- 												addOperationLocal(LOADI, $1->intval);
+ 												arrayOperation($1->start,$1->intval,LOADI);
  											}else{
  												addOperationLocal(LOAD, $1->intval);
 }
@@ -233,12 +236,12 @@ expression	: value								{if($1->variable){
 												checkVar($1->name);
 												checkVar($3->name);
 												if($1->table){
-													addOperationLocal(LOADI, $1->intval);
+													arrayOperation($1->start,$1->intval,LOADI);
 												}else{
 													addOperationLocal(LOAD, $1->intval);}
 												
 												if($3->table){
-													addOperationLocal(ADDI, $3->intval);
+													arrayOperation($3->start,$3->intval,ADDI);
 												}else{
 													addOperationLocal(ADD, $3->intval);}
 											}else if($1->variable){
@@ -246,14 +249,14 @@ expression	: value								{if($1->variable){
 												getNumber($3->intval);
 
 												if($1->table){
-													addOperationLocal(ADDI, $1->intval);
+													arrayOperation($1->start,$1->intval,ADDI);
 												}else{
 													addOperationLocal(ADD, $1->intval);}
 											}else{
 												getNumber($1->intval);
 												checkVar($3->name);
 												if($3->table){
-													addOperationLocal(ADDI, $3->intval);
+													arrayOperation($3->start,$3->intval,ADDI);
 												}else{
 													addOperationLocal(ADD, $3->intval);}
 											}
@@ -267,28 +270,32 @@ expression	: value								{if($1->variable){
 												checkVar($1->name);
 												checkVar($3->name);
 												if($1->table){
-													addOperationLocal(LOADI, $1->intval);
+													arrayOperation($1->start,$1->intval,LOADI);
 												}else{
 													addOperationLocal(LOAD, $1->intval);}
 												if($3->table){
-													addOperationLocal(SUBI, $3->intval);
+													arrayOperation($3->start,$3->intval,SUBI);
 												}else{
 													addOperationLocal(SUB, $3->intval);}
 											}else if($1->variable){
 												getNumber($3->intval);
 												checkVar($1->name);
-												addOperationLocal(STORE, dataOffset);
+												int r=dataOffset;
+												dataOffset+=1;
+												addOperationLocal(STORE, r);
+												
 												if($1->table){
-													addOperationLocal(LOADI, $1->intval);
+													arrayOperation($1->start,$1->intval,LOADI);
 												}else{
 													addOperationLocal(LOAD, $1->intval);}
-												addOperationLocal(SUB, dataOffset);
+												addOperationLocal(SUB, r);
+												dataOffset-=1;
 											}else{
 												checkVar($3->name);
 												getNumber($1->intval);
 
 												if($3->table){
-													addOperationLocal(SUBI, $3->intval);
+													arrayOperation($3->start,$3->intval,SUBI);
 												}else{
 													addOperationLocal(SUB, $3->intval);}
 											}
@@ -305,17 +312,18 @@ expression	: value								{if($1->variable){
 												long long r3=dataOffset+2;
 												long long r4=dataOffset+3;
 												long long r5=dataOffset+4;
+												dataOffset+=5;
 												long long jump;
 												addOperationLocal(ZERO, -1);
 												addOperationLocal(STORE, r1);
 												addOperationLocal(STORE, r5);
 												if($1->table){
-													addOperationLocal(LOADI, $1->intval);
+													arrayOperation($1->start,$1->intval,LOADI);
 												}else{
 													addOperationLocal(LOAD, $1->intval);}
 												addOperationLocal(JZERO,codeOffset+39);
 												if($3->table){
-													addOperationLocal(LOADI, $3->intval);
+													arrayOperation($3->start,$3->intval,LOADI);
 												}else{
 													addOperationLocal(LOAD, $3->intval);}
 												addOperationLocal(JZERO,codeOffset+37);
@@ -325,7 +333,7 @@ expression	: value								{if($1->variable){
 												addOperationLocal(SHR, -1);
 												addOperationLocal(STORE, r2);
 												if($1->table){
-													addOperationLocal(LOADI, $1->intval);
+													arrayOperation($1->start,$1->intval,LOADI);
 												}else{
 													addOperationLocal(LOAD, $1->intval);}
 												addOperationLocal(STORE, r3);
@@ -357,6 +365,7 @@ expression	: value								{if($1->variable){
 												addOperationLocal(JZERO, codeOffset+2);
 												addOperationLocal(JUMP, codeOffset-31);
 												addOperationLocal(LOAD, r5);
+												dataOffset-=5;
 											}else if($1->variable){
 												checkVar($1->name);
 												if($3->intval!=0){
@@ -375,7 +384,7 @@ expression	: value								{if($1->variable){
 														if(bits.at(i)==1){
 															addOperationLocal(SHL, -1);
 															if($1->table){
-																addOperationLocal(ADDI, $1->intval);
+																arrayOperation($1->start,$1->intval,ADDI);
 															}else{
 																addOperationLocal(ADD, $1->intval);}
 														}else{
@@ -385,6 +394,7 @@ expression	: value								{if($1->variable){
 												}else{
 													addOperationLocal(ZERO, -1);}
 											}else{
+
 												checkVar($3->name);
 												if($1->intval!=0){
 													std::vector<int> bits;
@@ -398,11 +408,12 @@ expression	: value								{if($1->variable){
 														}
 														b=b/2;
 													}
+													
 													for(long long i=0;i<bits.size();i++){
 														if(bits.at(i)==1){
 															addOperationLocal(SHL, -1);
 															if($3->table){
-																addOperationLocal(ADDI, $3->intval);
+																arrayOperation($3->start,$3->intval,ADDI);
 															}else{
 																addOperationLocal(ADD, $3->intval);}
 														}else{
@@ -428,20 +439,21 @@ expression	: value								{if($1->variable){
 												long long q=dataOffset+1;
 												long long n=dataOffset+2;	
 												long long aux=dataOffset+3;
+												dataOffset+=4;
 												long long jump1,jump2;
 												addOperationLocal(ZERO, -1);
 												addOperationLocal(STORE, q);
 												addOperationLocal(STORE, n);
 												
 												if($3->table){
-													addOperationLocal(LOADI, $3->intval);
+													arrayOperation($3->start,$3->intval,LOADI);
 												}else{
 													addOperationLocal(LOAD, $3->intval);}
 												addOperationLocal(JZERO, codeOffset+39);
 												addOperationLocal(STORE, aux);
 
 												if($1->table){
-													addOperationLocal(LOADI, $1->intval);
+													arrayOperation($1->start,$1->intval,LOADI);
 												}else{
 													addOperationLocal(LOAD, $1->intval);}
 												addOperationLocal(STORE, r);	
@@ -485,12 +497,14 @@ expression	: value								{if($1->variable){
 												addOperationLocal(STORE, n);
 												addOperationLocal(JUMP, jump2);
 												addOperationLocal(LOAD, q);
+												dataOffset-=4;
 											}else if($1->variable){
 												checkVar($1->name);
 												long long r=dataOffset;
 												long long q=dataOffset+1;
 												long long n=dataOffset+2;	
 												long long aux=dataOffset+3;
+												dataOffset+=4;
 												long long jump1,jump2;
 												addOperationLocal(ZERO, -1);
 												addOperationLocal(STORE, q);
@@ -500,7 +514,7 @@ expression	: value								{if($1->variable){
 												addOperationLocal(STORE, aux);
 
 												if($1->table){
-													addOperationLocal(LOADI, $1->intval);
+													arrayOperation($1->start,$1->intval,LOADI);
 												}else{
 													addOperationLocal(LOAD, $1->intval);}
 												addOperationLocal(STORE, r);	
@@ -544,19 +558,21 @@ expression	: value								{if($1->variable){
 												addOperationLocal(STORE, n);
 												addOperationLocal(JUMP, jump2);
 												addOperationLocal(LOAD, q);
+												dataOffset-=4;
 											}else{
 												checkVar($3->name);
 												long long r=dataOffset;
 												long long q=dataOffset+1;
 												long long n=dataOffset+2;	
 												long long aux=dataOffset+3;
+												dataOffset+=4;
 												long long jump1,jump2,change;
 												addOperationLocal(ZERO, -1);
 												addOperationLocal(STORE, q);
 												addOperationLocal(STORE, n);
 												
 												if($3->table){
-													addOperationLocal(LOADI, $3->intval);
+													arrayOperation($3->start,$3->intval,LOADI);
 												}else{
 													addOperationLocal(LOAD, $3->intval);}
 												change=codeOffset;
@@ -605,6 +621,7 @@ expression	: value								{if($1->variable){
 												addOperationLocal(JUMP, jump2);
 												addOperationLocal(LOAD, q);
 												changeOperation(change,codeOffset);
+												dataOffset-=4;
 											}
 										}}
 											
@@ -623,20 +640,21 @@ expression	: value								{if($1->variable){
 												long long q=dataOffset+1;
 												long long n=dataOffset+2;	
 												long long aux=dataOffset+3;
+												dataOffset+=4;
 												long long jump1,jump2;
 												addOperationLocal(ZERO, -1);
 												addOperationLocal(STORE, q);
 												addOperationLocal(STORE, n);
 												
 												if($3->table){
-													addOperationLocal(LOADI, $3->intval);
+													arrayOperation($3->start,$3->intval,LOADI);
 												}else{
 													addOperationLocal(LOAD, $3->intval);}
 												addOperationLocal(JZERO, codeOffset+39);
 												addOperationLocal(STORE, aux);
 
 												if($1->table){
-													addOperationLocal(LOADI, $1->intval);
+													arrayOperation($1->start,$1->intval,LOADI);
 												}else{
 													addOperationLocal(LOAD, $1->intval);}
 												addOperationLocal(STORE, r);	
@@ -680,12 +698,14 @@ expression	: value								{if($1->variable){
 												addOperationLocal(STORE, n);
 												addOperationLocal(JUMP, jump2);
 												addOperationLocal(LOAD, r);
+												dataOffset-=4;
 											}else if($1->variable){
 												checkVar($1->name);										
 												long long r=dataOffset;
 												long long q=dataOffset+1;
 												long long n=dataOffset+2;	
 												long long aux=dataOffset+3;
+												dataOffset+=4;
 												long long jump1,jump2;
 												addOperationLocal(ZERO, -1);
 												addOperationLocal(STORE, q);
@@ -695,7 +715,7 @@ expression	: value								{if($1->variable){
 												addOperationLocal(STORE, aux);
 
 												if($1->table){
-													addOperationLocal(LOADI, $1->intval);
+													arrayOperation($1->start,$1->intval,LOADI);
 												}else{
 													addOperationLocal(LOAD, $1->intval);}
 												addOperationLocal(STORE, r);	
@@ -739,19 +759,21 @@ expression	: value								{if($1->variable){
 												addOperationLocal(STORE, n);
 												addOperationLocal(JUMP, jump2);
 												addOperationLocal(LOAD, r);
+												dataOffset-=4;
 											}else{
 												checkVar($3->name);
 												long long r=dataOffset;
 												long long q=dataOffset+1;
 												long long n=dataOffset+2;	
 												long long aux=dataOffset+3;
+												dataOffset+=4;
 												long long jump1,jump2,change;
 												addOperationLocal(ZERO, -1);
 												addOperationLocal(STORE, q);
 												addOperationLocal(STORE, n);
 												
 												if($3->table){
-													addOperationLocal(LOADI, $3->intval);
+													arrayOperation($3->start,$3->intval,LOADI);
 												}else{
 													addOperationLocal(LOAD, $3->intval);}
 												change=codeOffset;
@@ -800,6 +822,7 @@ expression	: value								{if($1->variable){
 												addOperationLocal(JUMP, jump2);
 												addOperationLocal(LOAD, r);
 												changeOperation(change,codeOffset);
+												dataOffset-=4;
 											}
 										}}
 		;
@@ -815,48 +838,53 @@ condition	: value '=' value						{if(!$1->variable && !$3->variable){
 												checkVar($1->name);
 												checkVar($3->name);
 												if($1->table){
-													addOperationLocal(LOADI, $1->intval);
+													arrayOperation($1->start,$1->intval,LOADI);
 												}else{
 													addOperationLocal(LOAD, $1->intval);}
 												if($3->table){
-													addOperationLocal(SUBI, $3->intval);
+													arrayOperation($3->start,$3->intval,SUBI);
 												}else{
 													addOperationLocal(SUB, $3->intval);}
 												if($3->table){
-													addOperationLocal(ADDI, $3->intval);
+													arrayOperation($3->start,$3->intval,ADDI);
 												}else{
 													addOperationLocal(ADD, $3->intval);}
 												if($1->table){
-													addOperationLocal(SUBI, $1->intval);
+													arrayOperation($1->start,$1->intval,SUBI);
 												}else{
 													addOperationLocal(SUB, $1->intval);}
 											}else if($1->variable){
 												checkVar($1->name);
 												getNumber($3->intval);
-												addOperationLocal(STORE, dataOffset);
+												int r=dataOffset;
+												dataOffset+=1;
+												addOperationLocal(STORE, r);
 												if($1->table){
-													addOperationLocal(SUBI, $1->intval);
+													arrayOperation($1->start,$1->intval,SUBI);
 												}else{
 													addOperationLocal(SUB, $1->intval);}
 												if($1->table){
-													addOperationLocal(ADDI, $1->intval);
+													arrayOperation($3->start,$3->intval,ADDI);
 												}else{
 													addOperationLocal(ADD, $1->intval);}
-												addOperationLocal(SUB, dataOffset);
-												
+												addOperationLocal(SUB, r);
+												dataOffset-=1;												
 											}else{
 												checkVar($3->name);
 												getNumber($1->intval);
-												addOperationLocal(STORE, dataOffset);
+												int r=dataOffset;
+												dataOffset+=1;
+												addOperationLocal(STORE, r);
 												if($3->table){
-													addOperationLocal(SUBI, $3->intval);
+													arrayOperation($3->start,$3->intval,SUBI);
 												}else{
 													addOperationLocal(SUB, $3->intval);}
 												if($3->table){
-													addOperationLocal(ADDI, $3->intval);
+													arrayOperation($3->start,$3->intval,ADDI);
 												}else{
 													addOperationLocal(ADD, $3->intval);}
-												addOperationLocal(SUB, dataOffset);
+												addOperationLocal(SUB, r);
+												dataOffset-=1;
 											}
 										}
 										addOperationLocal(JZERO, codeOffset+2);$$=codeOffset;addOperationLocal(JUMP, -1);}
@@ -871,19 +899,19 @@ condition	: value '=' value						{if(!$1->variable && !$3->variable){
 												checkVar($1->name);
 												checkVar($3->name);
 												if($1->table){
-													addOperationLocal(LOADI, $1->intval);
+													arrayOperation($1->start,$1->intval,LOADI);
 												}else{
 													addOperationLocal(LOAD, $1->intval);}
 												if($3->table){
-													addOperationLocal(SUBI, $3->intval);
+													arrayOperation($3->start,$3->intval,SUBI);
 												}else{
 													addOperationLocal(SUB, $3->intval);}
 												if($3->table){
-													addOperationLocal(ADDI, $3->intval);
+													arrayOperation($3->start,$3->intval,ADDI);
 												}else{
 													addOperationLocal(ADD, $3->intval);}
 												if($1->table){
-													addOperationLocal(SUBI, $1->intval);
+													arrayOperation($1->start,$1->intval,SUBI);
 												}else{
 													addOperationLocal(SUB, $1->intval);}
 												addOperationLocal(JZERO, codeOffset+3);
@@ -894,38 +922,44 @@ condition	: value '=' value						{if(!$1->variable && !$3->variable){
 											}else if($1->variable){
 												checkVar($1->name);
 												getNumber($3->intval);
-												addOperationLocal(STORE, dataOffset);
+												int r=dataOffset;
+												dataOffset+=1;
+												addOperationLocal(STORE, r);
 												if($1->table){
-													addOperationLocal(SUBI, $1->intval);
+													arrayOperation($1->start,$1->intval,SUBI);
 												}else{
 													addOperationLocal(SUB, $1->intval);}
 												if($1->table){
-													addOperationLocal(ADDI, $1->intval);
+													arrayOperation($3->start,$3->intval,ADDI);
 												}else{
 													addOperationLocal(ADD, $1->intval);}
-												addOperationLocal(SUB, dataOffset);
+												addOperationLocal(SUB, r);
 												addOperationLocal(JZERO, codeOffset+3);
 												addOperationLocal(ZERO, -1);
 												addOperationLocal(JUMP, codeOffset+2);
 												addOperationLocal(INC, -1);
+												dataOffset-=1;
 												
 											}else{
 												checkVar($3->name);
 												getNumber($1->intval);
-												addOperationLocal(STORE, dataOffset);
+												int r=dataOffset;
+												dataOffset+=1;
+												addOperationLocal(STORE, r);
 												if($3->table){
-													addOperationLocal(SUBI, $3->intval);
+													arrayOperation($3->start,$3->intval,SUBI);
 												}else{
 													addOperationLocal(SUB, $3->intval);}
 												if($3->table){
-													addOperationLocal(ADDI, $3->intval);
+													arrayOperation($3->start,$3->intval,ADDI);
 												}else{
 													addOperationLocal(ADD, $3->intval);}
-												addOperationLocal(SUB, dataOffset);
+												addOperationLocal(SUB, r);
 												addOperationLocal(JZERO, codeOffset+3);
 												addOperationLocal(ZERO, -1);
 												addOperationLocal(JUMP, codeOffset+2);
 												addOperationLocal(INC, -1);
+												dataOffset-=1;
 											}
 										}
 										addOperationLocal(JZERO, codeOffset+2);$$=codeOffset;addOperationLocal(JUMP, -1);}
@@ -940,31 +974,34 @@ condition	: value '=' value						{if(!$1->variable && !$3->variable){
 												checkVar($1->name);
 												checkVar($3->name);
 												if($1->table){
-													addOperationLocal(LOADI, $1->intval);
+													arrayOperation($1->start,$1->intval,LOADI);
 												}else{
 													addOperationLocal(LOAD, $1->intval);}
 												addOperationLocal(INC, -1);
 												if($3->table){
-													addOperationLocal(SUBI, $3->intval);
+													arrayOperation($3->start,$3->intval,SUBI);
 												}else{
 													addOperationLocal(SUB, $3->intval);}
 											}else if($1->variable){
 												checkVar($1->name);
 												getNumber($3->intval);
-												addOperationLocal(STORE, dataOffset);
+												int r=dataOffset;
+												dataOffset+=1;
+												addOperationLocal(STORE, r);
 												if($1->table){
-													addOperationLocal(LOADI, $1->intval);
+													arrayOperation($1->start,$1->intval,LOADI);
 												}else{
 													addOperationLocal(LOAD, $1->intval);}
 												addOperationLocal(INC, -1);
-												addOperationLocal(SUB, dataOffset);
+												addOperationLocal(SUB, r);
+												dataOffset-=1;
 												
 											}else{
 												checkVar($3->name);
 												getNumber($1->intval);
 												addOperationLocal(INC, -1);
 												if($3->table){
-													addOperationLocal(SUBI, $3->intval);
+													arrayOperation($3->start,$3->intval,SUBI);
 												}else{
 													addOperationLocal(SUB, $3->intval);}
 											}
@@ -981,12 +1018,12 @@ condition	: value '=' value						{if(!$1->variable && !$3->variable){
 												checkVar($1->name);
 												checkVar($3->name);
 												if($3->table){
-													addOperationLocal(LOADI, $3->intval);
+													arrayOperation($3->start,$3->intval,LOADI);
 												}else{
 													addOperationLocal(LOAD, $3->intval);}
 												addOperationLocal(INC, -1);
 												if($1->table){
-													addOperationLocal(SUBI, $1->intval);
+													arrayOperation($1->start,$1->intval,SUBI);
 												}else{
 													addOperationLocal(SUB, $1->intval);}
 											}else if($1->variable){
@@ -994,7 +1031,7 @@ condition	: value '=' value						{if(!$1->variable && !$3->variable){
 												getNumber($3->intval);
 												addOperationLocal(INC, -1);
 												if($1->table){
-													addOperationLocal(SUBI, $1->intval);
+													arrayOperation($1->start,$1->intval,SUBI);
 												}else{
 													addOperationLocal(SUB, $1->intval);}
 												
@@ -1003,13 +1040,16 @@ condition	: value '=' value						{if(!$1->variable && !$3->variable){
 											}else{
 												checkVar($3->name);
 												getNumber($1->intval);
-												addOperationLocal(STORE, dataOffset);
+												int r=dataOffset;
+												dataOffset+=1;
+												addOperationLocal(STORE, r);
 												if($3->table){
 													addOperationLocal(LOAD, $3->intval);
 												}else{
 													addOperationLocal(LOAD, $3->intval);}
 												addOperationLocal(INC, -1);
-												addOperationLocal(SUB, dataOffset);
+												addOperationLocal(SUB, r);
+												dataOffset-=1;
 											}
 										}
 										addOperationLocal(JZERO, codeOffset+2);$$=codeOffset;addOperationLocal(JUMP, -1);}
@@ -1024,28 +1064,31 @@ condition	: value '=' value						{if(!$1->variable && !$3->variable){
 												checkVar($1->name);
 												checkVar($3->name);
 												if($1->table){
-													addOperationLocal(LOADI, $1->intval);
+													arrayOperation($1->start,$1->intval,LOADI);
 												}else{
 													addOperationLocal(LOAD, $1->intval);}
 												if($3->table){
-													addOperationLocal(SUBI, $3->intval);
+													arrayOperation($3->start,$3->intval,SUBI);
 												}else{
 													addOperationLocal(SUB, $3->intval);}
 											}else if($1->variable){
 												checkVar($1->name);
 												getNumber($3->intval);
-												addOperationLocal(STORE, dataOffset);
+												int r=dataOffset;
+												dataOffset+=1;
+												addOperationLocal(STORE, r);
 												if($1->table){
-													addOperationLocal(LOADI, $1->intval);
+													arrayOperation($1->start,$1->intval,LOADI);
 												}else{
 													addOperationLocal(LOAD, $1->intval);}
-												addOperationLocal(SUB, dataOffset);
+												addOperationLocal(SUB, r);
+												dataOffset-=1;
 												
 											}else{
 												getNumber($1->intval);
 												checkVar($3->name);
 												if($3->table){
-													addOperationLocal(SUBI, $3->intval);
+													arrayOperation($3->start,$3->intval,SUBI);
 												}else{
 													addOperationLocal(SUB, $3->intval);}
 											}
@@ -1062,18 +1105,18 @@ condition	: value '=' value						{if(!$1->variable && !$3->variable){
 												checkVar($1->name);
 												checkVar($3->name);
 												if($3->table){
-													addOperationLocal(LOADI, $3->intval);
+													arrayOperation($3->start,$3->intval,LOADI);
 												}else{
 													addOperationLocal(LOAD, $3->intval);}
 												if($1->table){
-													addOperationLocal(SUBI, $1->intval);
+													arrayOperation($1->start,$1->intval,SUBI);
 												}else{
 													addOperationLocal(SUB, $1->intval);}
 											}else if($1->variable){
 												checkVar($1->name);
 												getNumber($3->intval);
 												if($1->table){
-													addOperationLocal(SUBI, $1->intval);
+													arrayOperation($1->start,$1->intval,SUBI);
 												}else{
 													addOperationLocal(SUB, $1->intval);}
 												
@@ -1082,12 +1125,15 @@ condition	: value '=' value						{if(!$1->variable && !$3->variable){
 											}else{
 												checkVar($3->name);
 												getNumber($1->intval);
-												addOperationLocal(STORE, dataOffset);
+												int r=dataOffset;
+												dataOffset+=1;
+												addOperationLocal(STORE, r);
 												if($3->table){
 													addOperationLocal(LOAD, $3->intval);
 												}else{
 													addOperationLocal(LOAD, $3->intval);}
-												addOperationLocal(SUB, dataOffset);
+												addOperationLocal(SUB, r);
+												dataOffset-=1;
 											}
 										}
 										addOperationLocal(JZERO, codeOffset+2);$$=codeOffset;addOperationLocal(JUMP, -1);}
@@ -1102,6 +1148,7 @@ value		: num								{struct varTabMath *tempV= (struct varTabMath*)malloc(sizeof
 										$$=tempV;}
 		| identifier							{struct varTabMath *tempV= (struct varTabMath*)malloc(sizeof (struct varTabMath));
 										tempV->intval=$1->intval;
+										tempV->start=$1->start;
 										tempV->name=new char[sizeof($1->name)+1];
 										strcpy(tempV->name,$1->name);
 										tempV->variable=true;
@@ -1146,6 +1193,7 @@ identifier	: pidentifier							{long long k=getVar($1);
 											if(l!=-1){
 												struct varTab *tempV= (struct varTab*)malloc(sizeof (struct varTab));
 												tempV->intval=k;
+												tempV->start=l;
 												tempV->name=$1;
 												tempV->table=true;
 												$$=tempV;
@@ -1173,7 +1221,7 @@ identifier	: pidentifier							{long long k=getVar($1);
 										}
 										if(k!=-1){
 											struct varTab *tempV= (struct varTab*)malloc(sizeof (struct varTab));
-											tempV->intval=k+$3-1;
+											tempV->intval=k+$3+1;
 											tempV->name=$1;
 											tempV->table=false;
 											$$=tempV;
@@ -1213,8 +1261,33 @@ void newVariable(std::string name,bool type, long long size){
 	if(!addVar(name,type)){
 		yyerror("Duplicate initialization\n");
 	}else{
-		stable[name].offset=dataLocation(size);
+		if(type){
+			int first=dataOffset;
+			stable[name].offset=dataLocation(size+1);
+			getNumber(first+1);
+			addOperationLocal(STORE,first);		
+		}else{
+			stable[name].offset=dataLocation(size);
+		}
 	}
+}
+void checkVar(char* name){
+	if(!getInit(std::string(name))){
+		std::string err1(name);
+		std::string error="Variable \""+err1+"\" not initialized!";
+		char * temp=new char[error.size()+1];
+		strcpy ( temp, error.c_str() );
+		yyerror(temp);
+	}
+}
+void arrayOperation(int start, int i, enum codeOptions option){
+	addOperationLocal(LOAD, start);
+	addOperationLocal(ADD, i);
+	int r=dataOffset;
+	dataOffset+=1;
+	addOperationLocal(STORE, r);
+	addOperationLocal(option,r);
+	dataOffset-=1;
 }
 /*OTHER FUNCTIONS*/
 struct labels* newLabel(){
@@ -1247,12 +1320,4 @@ void getNumber(long long n){
 		}
 	}
 }
-void checkVar(char* name){
-	if(!getInit(std::string(name))){
-		std::string err1(name);
-		std::string error="Variable \""+err1+"\" not initialized!";
-		char * temp=new char[error.size()+1];
-		strcpy ( temp, error.c_str() );
-		yyerror(temp);
-	}
-}
+

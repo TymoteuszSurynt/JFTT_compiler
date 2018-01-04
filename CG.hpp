@@ -1,7 +1,7 @@
 long long dataOffset=0;
-long long dataLocation(int type){
+long long dataLocation(int size){
 	long long temp=dataOffset;
-	dataOffset+=type;
+	dataOffset+=size;
 	return temp;
 }
 
