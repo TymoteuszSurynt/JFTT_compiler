@@ -1,58 +1,36 @@
 # Bison/Flex compiler
 
-Things to do:
-  - project template (done)(tested)
-  - variable implementation (done)(tested)
-  - tables (done)(tested)
-  - adding (done)(tested)
-  - subtraction(done)(tested)
-  - multiplication (done)(tested)
-  - division (done)(tested)
-  - remainder (done)(tested)
-  - IF (done)(tested)
-  - IF+ELSE (done)(tested)
-  - cond = (done)(tested)
-  - cond <> (done)(tested)
-  - cond <  (done)(tested)
-  - cond > (done)(tested)
-  - cond <= (done)(tested)
-  - cond >= (done)(tested)
-  - WHILE (done)(tested)
-  - FOR UP (done)(tested)
-  - FOR DOWN (done)(tested)
-  - lines (done)(tested)
-  - variable testing (done)(tested)
 ### Language rules:
 1. Program structure:
 VAR {variable declaration} BEGIN {commands} END
 Only static array declarations: e.g. a[100]
 2. Commands:
-- assignment: e.g.: 
+⋅⋅* assignment: e.g.: 
 x:=7;
 x[6]:=12;
 x[y]:=z;
-- For loop structure:
+⋅⋅* For loop structure:
 FOR {iterator} FROM {value/variable} TO/DOWNTO {value/variable} DO {commands} ENDFOR
-- While loop structure: 
+⋅⋅* While loop structure: 
 WHILE {condition} DO {commands} ENDWHILE
-- If structure: 
+⋅⋅* If structure: 
 IF {condition} THEN {commands} [ELSE {commands}] ENDIF
 3. Operators:
-- ' \+ ' - addition
-- ' \- ' - subtraction
-- ' * ' - multiplication
-- ' \\ ' - division
-- ' % ' - remainder
-- all numbers are natural, so x-y=max{0,x-y}
-- x\0=0
-- x%0=0
+⋅⋅* ' \+ ' - addition
+⋅⋅* ' \- ' - subtraction
+⋅⋅* ' * ' - multiplication
+⋅⋅* ' \\ ' - division
+⋅⋅* ' % ' - remainder
+⋅⋅* all numbers are natural, so x-y=max{0,x-y}
+⋅⋅* x\0=0
+⋅⋅* x%0=0
 4. Conditions:
--  ' = ' - equal
-- ' <> ' - different
-- ' < ' - greater
-- ' <= ' - greater or equal
-- ' > ' - less than
-- ' >= ' - less than or equal;
+⋅⋅*  ' = ' - equal
+⋅⋅* ' <> ' - different
+⋅⋅* ' < ' - greater
+⋅⋅* ' <= ' - greater or equal
+⋅⋅* ' > ' - less than
+⋅⋅* ' >= ' - less than or equal;
 
 ### Assembly commands:
 
