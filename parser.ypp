@@ -1173,7 +1173,7 @@ identifier	: pidentifier							{long long k=getVar($1);
 										}
 										if(k!=-1){
 											struct varTab *tempV= (struct varTab*)malloc(sizeof (struct varTab));
-											tempV->intval=k+$3;
+											tempV->intval=k+$3-1;
 											tempV->name=$1;
 											tempV->table=false;
 											$$=tempV;
