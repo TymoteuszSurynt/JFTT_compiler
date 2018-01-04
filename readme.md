@@ -23,36 +23,36 @@ Things to do:
   - lines (done)(tested)
   - variable testing (done)(tested)
 ### Language rules:
-- Program structure:
+1. Program structure:
 VAR {variable declaration} BEGIN {commands} END
 Only static array declarations: e.g. a[100]
-- Commands:
--- assignment: e.g.: 
+2. Commands:
+- assignment: e.g.: 
 x:=7;
 x[6]:=12;
 x[y]:=z;
--- For loop structure:
+- For loop structure:
 FOR {iterator} FROM {value/variable} TO/DOWNTO {value/variable} DO {commands} ENDFOR
--- While loop structure: 
+- While loop structure: 
 WHILE {condition} DO {commands} ENDWHILE
--- If structure: 
+- If structure: 
 IF {condition} THEN {commands} [ELSE {commands}] ENDIF
-- Operators:
--- ' \+ ' - addition
---' \- ' - subtraction
---' * ' - multiplication
---' \\ ' - division
---' % ' - remainder
--- all numbers are natural, so x-y=max{0,x-y}
--- x\0=0
--- x%0=0
-- Conditions:
---  ' = ' - equal
---' <> ' - different
---' < ' - greater
---' <= ' - greater or equal
---' > ' - less than
---' >= ' - less than or equal;
+3. Operators:
+- ' \+ ' - addition
+- ' \- ' - subtraction
+- ' * ' - multiplication
+- ' \\ ' - division
+- ' % ' - remainder
+- all numbers are natural, so x-y=max{0,x-y}
+- x\0=0
+- x%0=0
+4. Conditions:
+-  ' = ' - equal
+- ' <> ' - different
+- ' < ' - greater
+- ' <= ' - greater or equal
+- ' > ' - less than
+- ' >= ' - less than or equal;
 
 ### Assembly commands:
 
