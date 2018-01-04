@@ -2,19 +2,19 @@
 
 ### Language rules:
 1. Program structure:
-VAR {variable declaration} BEGIN {commands} END
-Only static array declarations: e.g. a[100]
+	-VAR {variable declaration} BEGIN {commands} END
+		-Only static array declarations: e.g. a[100]
 2. Commands:
 	- assignment: e.g.: 
-x:=7;
-x[6]:=12;
-x[y]:=z;
+		-x:=7;
+		-x[6]:=12;
+		-x[y]:=z;
 	- For loop structure:
-FOR {iterator} FROM {value/variable} TO/DOWNTO {value/variable} DO {commands} ENDFOR
+		-FOR {iterator} FROM {value/variable} TO/DOWNTO {value/variable} DO {commands} ENDFOR
 	- While loop structure: 
-WHILE {condition} DO {commands} ENDWHILE
+		-WHILE {condition} DO {commands} ENDWHILE
 	- If structure: 
-IF {condition} THEN {commands} [ELSE {commands}] ENDIF
+		-IF {condition} THEN {commands} [ELSE {commands}] ENDIF
 3. Operators:
 	- ' \+ ' - addition
 	- ' \- ' - subtraction
