@@ -63,6 +63,7 @@
 Input:
 
 ```
+(Comment)
 VAR
   a b[10] c
 BEGIN
@@ -72,7 +73,7 @@ c:=0;
 FOR i FROM b[a] DOWNTO 1 DO
 	c:=c+i;
 	IF c>20 THEN
-		WRITE c;
+		WRITE c; (Other comment)
 	ELSE
 		WRITE 20;
 	ENDIF
