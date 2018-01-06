@@ -12,7 +12,7 @@ extern "C" int yyparse();
 DIGIT	[0-9]
 ID	[_a-z]+
 %%
-\(.+\)		{}
+\(([^\(\)])*\)	{}
 {DIGIT}+	{yylval.intval=atoi(yytext);return(num);}
 ":="		{return(ASSIGN);}
 "<>"		{return(DIFF);}

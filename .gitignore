@@ -6,3 +6,4 @@
 *.t
 *.out
 interpreter
+*.imp
