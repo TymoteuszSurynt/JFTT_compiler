@@ -13,7 +13,7 @@ DIGIT	[0-9]
 ID	[_a-z]+
 %%
 \(([^\(\)])*\)	{}
-{DIGIT}+	{yylval.intval=atoi(yytext);return(num);}
+{DIGIT}+	{yylval.intval=atoll(yytext);return(num);}
 ":="		{return(ASSIGN);}
 "<>"		{return(DIFF);}
 "<="		{return(SOE);}

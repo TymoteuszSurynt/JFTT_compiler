@@ -28,7 +28,7 @@ enum codeOptions{
 
 struct instruction{
 	enum codeOptions co;
-	int arg;
+	unsigned long long arg;
 	int cost;
 };
 std::vector<instruction> instructions;
@@ -75,10 +75,10 @@ std::string decodeEnum(enum codeOptions option){
 		
 	}
 }
-void changeOperation(int id, int arg){
+void changeOperation(unsigned long long id, unsigned long long arg){
 	instructions.at(id).arg=arg;
 }
-void addOperation(enum codeOptions option, int arg){
+void addOperation(enum codeOptions option, unsigned long long arg){
 	struct instruction temp{};
 	temp.arg=arg;
 	switch(option){

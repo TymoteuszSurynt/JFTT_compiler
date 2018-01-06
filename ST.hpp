@@ -4,7 +4,7 @@
 
 struct variable{
 	std::string name;
-	int offset;
+	unsigned long long offset;
 	bool table;
 	bool init;	
 };
@@ -20,7 +20,7 @@ bool addVar(std::string name,bool table){
 	stable[name]=a;
 	return true;
 }
-long long getVar(std::string name){
+unsigned long long getVar(std::string name){
 	it=stable.find(name);
 	if(it!=stable.end()){
 		return it->second.offset;
