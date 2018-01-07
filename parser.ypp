@@ -136,8 +136,7 @@ command		: identifier ASSIGN expression ';'				{setInit(std::string($1->name));
 										}
 										setInit(std::string($2));addOperationLocal(STORE, $1->iterator);}
 		TO
-			value							{
-										if($7->variable){
+			value							{if($7->variable){
 											checkVar($7->name);
 											if($7->table){
 												arrayOperation($7->start,$7->intval,LOADI);
@@ -321,7 +320,8 @@ expression	: value								{if($1->variable){
 												if($1->table){
 													arrayOperation($1->start,$1->intval,LOADI);
 												}else{
-													addOperationLocal(LOAD, $1->intval);}change1=codeOffset;												
+													addOperationLocal(LOAD, $1->intval);}
+												change1=codeOffset;												
 												addOperationLocal(JZERO,-1);
 												
 												if($3->table){
@@ -1181,13 +1181,12 @@ identifier	: pidentifier							{unsigned long long k=getVar($1);
 											strcpy ( temp, error.c_str() );
 											yyerror(temp);
 										}
-										if(k!=-1){
-											struct varTab *tempV= (struct varTab*)malloc(sizeof (struct varTab));
-											tempV->name=$1;
-											tempV->intval=k;
-											tempV->table=false;
-											$$=tempV;
-										}else{
+										struct varTab *tempV= (struct varTab*)malloc(sizeof (struct varTab));
+										tempV->name=$1;
+										tempV->intval=k;
+										tempV->table=false;
+										$$=tempV;
+										if(k==-1){
 											std::string err1=$1;
 											std::string error="Variable \""+err1+"\" not defined!";
 											char * temp=new char[error.size()+1];
@@ -1203,15 +1202,15 @@ identifier	: pidentifier							{unsigned long long k=getVar($1);
 											strcpy ( temp, error.c_str() );
 											yyerror(temp);
 										}
+										struct varTab *tempV= (struct varTab*)malloc(sizeof (struct varTab));
+										tempV->intval=k;
+										tempV->start=l;
+										tempV->name=$1;
+										tempV->table=true;
+										$$=tempV;
 										if(k!=-1){
-											if(l!=-1){
-												struct varTab *tempV= (struct varTab*)malloc(sizeof (struct varTab));
-												tempV->intval=k;
-												tempV->start=l;
-												tempV->name=$1;
-												tempV->table=true;
-												$$=tempV;
-											}else{
+											
+											if(l==-1){
 												std::string err1=$1;
 												std::string error="Variable \""+err1+"\" not defined!";
 												char * temp=new char[error.size()+1];
@@ -1233,13 +1232,12 @@ identifier	: pidentifier							{unsigned long long k=getVar($1);
 											strcpy ( temp, error.c_str() );
 											yyerror(temp);
 										}
-										if(k!=-1){
-											struct varTab *tempV= (struct varTab*)malloc(sizeof (struct varTab));
-											tempV->intval=k+$3+1;
-											tempV->name=$1;
-											tempV->table=false;
-											$$=tempV;
-										}else{
+										struct varTab *tempV= (struct varTab*)malloc(sizeof (struct varTab));
+										tempV->intval=k+$3+1;
+										tempV->name=$1;
+										tempV->table=false;
+										$$=tempV;
+										if(k==-1){
 											std::string err1=$1;
 											std::string error="Variable \""+err1+"\" not defined!";
 											char * temp=new char[error.size()+1];
@@ -1286,6 +1284,7 @@ void newVariable(std::string name,bool type, unsigned long long size){
 	}
 }
 void checkVar(char* name){
+
 	if(!getInit(std::string(name))){
 		std::string err1(name);
 		std::string error="Variable \""+err1+"\" not initialized!";
@@ -1293,6 +1292,7 @@ void checkVar(char* name){
 		strcpy ( temp, error.c_str() );
 		yyerror(temp);
 	}
+
 }
 void arrayOperation(unsigned long long start, unsigned long long i, enum codeOptions option){
 	if(option == LOADI){
