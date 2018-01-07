@@ -17,8 +17,14 @@ bool addVar(std::string name,bool table, bool iterator){
 	if(it!=stable.end()){
 		return false;
 	}
-	struct variable a{.name = name, .offset=0, table = table, .init=false, .iterator=iterator};
-	stable[name]=a;
+	if(!table){
+		struct variable a{.name = name, .offset=0, table = table, .init=false, .iterator=iterator};
+		stable[name]=a;
+	}else{
+		struct variable a{.name = name, .offset=0, table = table, .init=true, .iterator=iterator};
+		stable[name]=a;
+	}
+	
 	return true;
 }
 bool isIterator(std::string name){
