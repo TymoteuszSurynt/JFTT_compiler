@@ -6,19 +6,27 @@ struct variable{
 	std::string name;
 	unsigned long long offset;
 	bool table;
-	bool init;	
+	bool init;
+	bool iterator;
 };
 
 std:: map<std::string,variable> stable;
 std::map<std::string,variable>::iterator it;
-bool addVar(std::string name,bool table){
+bool addVar(std::string name,bool table, bool iterator){
 	it=stable.find(name);
 	if(it!=stable.end()){
 		return false;
 	}
-	struct variable a{.name = name, .offset=0, table = table, .init=false};
+	struct variable a{.name = name, .offset=0, table = table, .init=false, .iterator=iterator};
 	stable[name]=a;
 	return true;
+}
+bool isIterator(std::string name){
+	it=stable.find(name);
+	if(it!=stable.end()){
+		return it->second.iterator;
+	}
+	return false;
 }
 unsigned long long getVar(std::string name){
 	it=stable.find(name);

@@ -14,7 +14,7 @@ int err;
 int yylex(void);
 void yyerror (char *msg);
 /*MY FUNCTIONS*/
-void newVariable(std::string name,bool type,unsigned long long size);
+void newVariable(std::string name,bool type,unsigned long long size, bool iterator);
 struct labels* newLabel();
 struct varTabFor* newFor();
 void getNumber(unsigned long long n);
@@ -82,8 +82,8 @@ program		: VAR
 		;
 
 vdeclarations	: /* empty */							
-		| vdeclarations pidentifier					{newVariable($2,false,1);}
-		| vdeclarations pidentifier '[' num ']' 			{newVariable($2,true,$4);}
+		| vdeclarations pidentifier					{newVariable($2,false,1,false);}
+		| vdeclarations pidentifier '[' num ']' 			{newVariable($2,true,$4,false);}
 		;
 
 commands	: commands command						
@@ -91,6 +91,13 @@ commands	: commands command
 		;
 
 command		: identifier ASSIGN expression ';'				{setInit(std::string($1->name));
+										if(isIterator(std::string($1->name))){
+											std::string err1=$1->name;
+											std::string error="Variable \""+err1+"\" is an iterator, you can not modify it!";
+											char * temp=new char[error.size()+1];
+											strcpy ( temp, error.c_str() );
+											yyerror(temp);
+										}
 										if($1->table){
 											
 											arrayOperation($1->start,$1->intval,STOREI);
@@ -122,7 +129,7 @@ command		: identifier ASSIGN expression ';'				{setInit(std::string($1->name));
 		| FOR 								
 			pidentifier						
 		FROM	
-			value							{newVariable($2,false,1);$1=newFor();$1->iterator=getVar($2);
+			value							{newVariable($2,false,1,true);$1=newFor();$1->iterator=getVar($2);
 										if($4->variable){
 											checkVar($4->name);
 											if($4->table){
@@ -158,7 +165,7 @@ command		: identifier ASSIGN expression ';'				{setInit(std::string($1->name));
 		| FOR 								
 			pidentifier						
 		FROM	
-			value							{newVariable($2,false,1);$1=newFor();$1->iterator=getVar($2);
+			value							{newVariable($2,false,1,true);$1=newFor();$1->iterator=getVar($2);
 										if($4->variable){
 											checkVar($4->name);
 											if($4->table){
@@ -1269,8 +1276,8 @@ int main(int argc, char* argv[]){
 /*yyerror*/
 void yyerror (char *msg) { err++;std::cerr<<"Error in line "<<yylineno<<": "<<msg<<"\n"; }
 /*STABLE FUNCTIONS*/
-void newVariable(std::string name,bool type, unsigned long long size){
-	if(!addVar(name,type)){
+void newVariable(std::string name,bool type, unsigned long long size,bool iterator){
+	if(!addVar(name,type,iterator)){
 		yyerror("Duplicate initialization\n");
 	}else{
 		if(type){
